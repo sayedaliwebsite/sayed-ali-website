@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Sayed Ali Barber Shop · CRM Login</title>
+<link rel="icon" href="assets/favicon_S.png">
+<!-- Supabase JS client (rebuild: replaces login.php's PHP/MySQL check with Supabase Auth) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  :root {
+    --bg: #0B0E15;
+    --card: #151A25;
+    --accent: #1749E8;
+    --text: #FFFFFF;
+    --muted: #8A93A6;
+    --border: #232A3A;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 40px 36px;
+    width: 100%;
+    max-width: 380px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  }
+  .brand { text-align: center; margin-bottom: 32px; perspective: 600px; }
+  @keyframes logoSpin { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
+  .brand-logo { display: block; width: 200px; height: auto; max-width: 320px; margin: 0 auto 14px; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; }
+  .login-foot { text-align: center; margin-top: 22px; font-size: 12px; color: var(--muted); perspective: 600px; }
+  .login-foot b { color: var(--muted); }
+  .foot-logo { display: inline-block; width: 20px; height: 20px; vertical-align: middle; margin-inline-start: 6px; animation: logoSpin 8s linear infinite; }
+  .brand h1 {
+    margin: 0;
+    font-size: 26px;
+    letter-spacing: 4px;
+    font-weight: 700;
+  }
+  .brand p {
+    margin: 6px 0 0;
+    font-size: 12px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .field { margin-bottom: 18px; }
+  input[type="text"],
+  input[type="password"] {
+    width: 100%;
+    padding: 12px 14px;
+    background: #0F131C;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.15s ease;
+  }
+  input[type="text"]:focus,
+  input[type="password"]:focus { border-color: var(--accent); }
+  button {
+    width: 100%;
+    padding: 13px 14px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: opacity 0.15s ease;
+  }
+  button:hover { opacity: 0.9; }
+  button:disabled { opacity: 0.6; cursor: default; }
+  .error {
+    background: rgba(232, 52, 78, 0.12);
+    border: 1px solid rgba(232, 52, 78, 0.35);
+    color: #FF6B84;
+    font-size: 13px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    margin-bottom: 18px;
+    display: none;
+  }
+  .error.on { display: block; }
+</style>
+</head>
+<body>
+  <div class="card" id="loginCard" style="visibility:hidden">
+    <div class="brand">
+      <img class="brand-logo" src="assets/sayed_ali_logo_white.png" alt="" />
+      <h1>SAYED ALI</h1>
+      <p>Barber Shop &middot; CRM</p>
+    </div>
+    <div class="error" id="loginError"></div>
+    <form id="loginForm" autocomplete="off">
+      <div class="field">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" autocomplete="username" required autofocus>
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" autocomplete="current-password" required>
+      </div>
+      <button type="submit" id="loginBtn">Log In</button>
+    </form>
+    <div class="login-foot">Powered by <b>boostyourbuisness.net</b> <img class="foot-logo" src="assets/byb_logo_transparent.png" alt="" /></div>
+  </div>
+
+  <div class="card" id="connCard" style="display:none">
+    <div class="brand">
+      <img class="brand-logo" src="assets/sayed_ali_logo_white.png" alt="" />
+      <h1>SAYED ALI</h1>
+      <p>Barber Shop &middot; CRM</p>
+    </div>
+    <div class="error on">Can't connect — check your internet connection and try again.</div>
+    <button type="button" id="connRetryBtn">Retry</button>
+  </div>
+
+<script>
+/* Rebuild note: replaces login.php's PHP/MySQL "SELECT ... FROM users" +
+   password_verify() check with Supabase Auth. The "Username" field/label is
+   kept identical for visual parity with login.php, but its value is passed
+   to Supabase as the email — Supabase Auth accounts are keyed by email, not
+   an arbitrary username, so each account needs to be created with an email
+   address (e.g. the shop can standardize on username@sayedalibarbershop...
+   whatever convention is chosen) for sign-in to work. */
+const SUPABASE_URL = 'https://shehxieqooeokliequgc.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_9RtXsboEA7Hgv0MJjQG9kw_6j6ghsKX';
+/* Bug fix: supabase-js defaults to persisting the session in localStorage,
+   which survives closing and reopening the browser entirely -- the owner
+   wants a fresh login required every time the browser/app is actually
+   closed and reopened, while still staying logged in across reloads and
+   navigation within the same open browser session. sessionStorage is the
+   browser storage that matches exactly that lifetime: same-tab reloads and
+   in-tab navigation (login.html <-> index.html) keep reading the same
+   sessionStorage, but it's cleared the moment the browser (or the tab) is
+   actually closed -- see the fuller reasoning in the conversation/report. */
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  auth: { storage: window.sessionStorage, persistSession: true, autoRefreshToken: true }
+});
+
+const errEl = document.getElementById('loginError');
+const btn = document.getElementById('loginBtn');
+
+function showError(msg){
+  errEl.textContent = msg;
+  errEl.classList.add('on');
+}
+
+/* Distinguishes "the browser/network couldn't even reach Supabase" from "we
+   reached Supabase and it told us the session is bad". These must NOT be
+   handled the same way: a network blip says nothing about whether the stored
+   session is still valid, so it must never trigger a signOut(). Only an
+   actual auth-level rejection (bad/expired/reused refresh token, corrupted
+   session, etc.) should clear storage.
+   - The underlying fetch() rejecting surfaces as a TypeError with a
+     browser-specific message: "Failed to fetch" (Chrome/Edge), "NetworkError
+     when attempting to fetch resource" (Firefox), "Load failed" (Safari).
+   - supabase-js itself labels retryable network failures during auth calls
+     with the name "AuthRetryableFetchError".
+   - Either can arrive wrapped one level deep (.cause / .originalError), so
+     check those too. Anything else (AuthApiError, AuthSessionMissingError,
+     etc.) is a real auth/session problem, not connectivity. */
+function isNetworkError(err){
+  if (!err) return false;
+  if (err.name === 'AuthRetryableFetchError') return true;
+  if (err instanceof TypeError && /fetch|network|load failed/i.test(err.message||'')) return true;
+  const nested = err.cause || err.originalError;
+  return (nested && nested !== err) ? isNetworkError(nested) : false;
+}
+
+function showConnError(){
+  document.getElementById('loginCard').style.display = 'none';
+  document.getElementById('connCard').style.display = 'block';
+}
+document.getElementById('connRetryBtn').addEventListener('click', () => location.reload());
+
+/* Bug fix: getSession() is async, so the form was rendered (and focusable/
+   typeable) well before this check resolved. If a session already existed,
+   the redirect fired mid-typing and looked like an unrequested auto-login.
+   Fix: keep the card hidden (visibility:hidden set inline in the HTML) until
+   this check resolves -- redirect immediately if a session exists, otherwise
+   reveal the form. Either way nothing is interactive before we know.
+
+   Bug fix 2: getSession() doesn't just return null when there's no valid
+   session -- if a *stale* session is sitting in localStorage (e.g. a refresh
+   token that's expired or was already rotated/used elsewhere), it REJECTS
+   instead. That threw here uncaught, which aborted this IIFE before the
+   "reveal the form" line ever ran -- the card stayed hidden forever and the
+   login screen looked like it wasn't appearing at all. The only way out was
+   logging out from inside the dashboard, which calls signOut() and wipes the
+   bad session, so the next load of login.html had nothing to choke on. Fix:
+   wrap this in try/catch and treat a genuine auth failure (missing OR
+   broken session) as "no session" -- clear whatever's stored and show the
+   form. A network failure is NOT treated the same way: it means we simply
+   don't know yet whether the stored session is good, so it must be left
+   untouched -- show a connection error with a Retry instead. */
+(async () => {
+  try {
+    const { data:{ session } } = await sb.auth.getSession();
+    if (session) { location.href = 'index.html'; return; }
+  } catch (err) {
+    if (isNetworkError(err)) { showConnError(); return; }
+    try { await sb.auth.signOut(); } catch (e) {}
+  }
+  document.getElementById('loginCard').style.visibility = 'visible';
+})();
+
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  errEl.classList.remove('on');
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  if (!username || !password) { showError('Please enter your username and password.'); return; }
+  btn.disabled = true;
+  try {
+    const email = username.includes('@') ? username : username + '@sayedalibarbershop.local';
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) { showError('Incorrect username or password.'); return; }
+    location.href = 'index.html';
+  } catch (err) {
+    showError('Could not reach the server. Check your connection and try again.');
+  } finally {
+    btn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
