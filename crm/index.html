@@ -689,7 +689,10 @@
 
 <div class="mscrim" id="floorPickerScrim" style="z-index:99999">
   <div class="modal" style="width:420px;text-align:center;padding:10px">
-    <div class="mh"><h3 id="floorPickerTitle"></h3><p id="floorPickerSub"></p></div>
+    <div class="mh" style="position:relative">
+      <button onclick="closeFloorPicker()" style="position:absolute;top:14px;inset-inline-end:14px;background:none;border:none;cursor:pointer;color:var(--ink-faint);font-size:20px;line-height:1" aria-label="close">&times;</button>
+      <h3 id="floorPickerTitle"></h3><p id="floorPickerSub"></p>
+    </div>
     <div class="mb" id="floorPickerBtns" style="display:flex;flex-direction:column;gap:12px"></div>
   </div>
 </div>
@@ -732,11 +735,11 @@
           <button id="arB" onclick="setLang('ar')">ع</button>
         </div>
         <button class="bell" onclick="toggleNotif()"><svg viewBox="0 0 24 24" fill="none"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9zM13.7 21a2 2 0 01-3.4 0" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="dot"></span></button>
+        <span id="floorTag" onclick="openFloorPicker()" style="cursor:pointer;font-size:12px;font-weight:700;padding:5px 11px;border-radius:6px;background:var(--red);color:#fff;margin-inline-end:8px"></span>
         <button class="btn btn-blue" id="checkinBtn" onclick="openVisit()">
           <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
           <span data-i="newVisit">Check in</span>
         </button>
-        <span id="floorTag" onclick="openFloorPicker()" style="cursor:pointer;font-size:12px;padding:4px 10px;border-radius:999px;background:var(--line-soft);color:var(--ink-soft);margin-inline-end:8px"></span>
         <div class="who" id="who" onclick="logout()" style="cursor:pointer" title="Click to log out">SA</div>
       </div>
     </header>
@@ -1376,7 +1379,7 @@ const I18N={
   reportOverview:"This Month", reportTotalOwed:"Total owed",
   floor1Label:"1st Floor", floor2Label:"2nd Floor", cashierLabel:"Cashier",
   chooseFloorTitle:"Which station is this tablet?",
-  chooseFloorSub:"This sets which station every check-in, booking, lead and checkout from this device is tagged with — and, for Cashier, restricts this tablet to checkout only. Pick carefully — you can change it later by tapping the station tag.",
+  chooseFloorSub:"Pick your spot. Tap it anytime to change.",
   floorTag:"Station", noFloorTag:"Not assigned",
   cashierOnlyCheckout:"This tablet is set to Cashier — it can only check clients out.",
   notCashierStation:"Only the Cashier station can check clients out.",
@@ -1537,7 +1540,7 @@ const I18N={
   reportOverview:"نظرة عامة", reportTotalOwed:"الإجمالي",
   floor1Label:"الدور الأول", floor2Label:"الدور الثاني", cashierLabel:"الكاشير",
   chooseFloorTitle:"المحطة دي بتاعة تابلت مين؟",
-  chooseFloorSub:"الاختيار ده هيحدد إن كل تسجيل دخول وحجز وعميل محتمل وعملية حساب من الجهاز ده هتتسجل على المحطة دي — ولو اخترت كاشير، التابلت هيقفل على الحساب بس. اختار بعناية — تقدر تغيرها بعدين بالضغط على اسم المحطة.",
+  chooseFloorSub:"اختار مكانك. تقدر تغيرها بعدين بالضغط على المكان.",
   floorTag:"المحطة", noFloorTag:"غير محددة",
   cashierOnlyCheckout:"التابلت ده متحدد كـ كاشير — بس يقدر يقفل الحسابات. مفيش حاجة تانية.",
   notCashierStation:"قفل الحساب (الخروج) بس بتاع محطة الكاشير.",
@@ -2938,10 +2941,21 @@ async function saveEC(){
  if(ok){ closeEC(); closeDrawer(); }
 }
 function delClient(){
- if(!requireNonCashierAction()) return;
  if(!ownerOnly()) return;
+ if(!requireNonCashierAction()) return;
  askConfirm(t('confirmDelClient'), t('yesDeleteClient'), async ()=>{
-   const ok=await apiAction(t('clientDeleted'), async ()=>{ const {error}=await sb.from('clients').delete().eq('id',ecId); if(error) throw new Error(error.message); }, loadClients);
+   const ok=await apiAction(t('clientDeleted'), async ()=>{
+     const c=clientById(ecId);
+     const visitIds=(c?c.visits:[]).map(v=>v.id);
+     if(visitIds.length){
+       const {error:svcErr}=await sb.from('visit_services').delete().in('visit_id',visitIds);
+       if(svcErr) throw new Error(svcErr.message);
+       const {error:visitErr}=await sb.from('visits').delete().in('id',visitIds);
+       if(visitErr) throw new Error(visitErr.message);
+     }
+     const {error}=await sb.from('clients').delete().eq('id',ecId);
+     if(error) throw new Error(error.message);
+   }, loadClients);
    if(ok){ closeEC(); closeDrawer(); }
  });
 }
