@@ -2211,7 +2211,8 @@ function go(k){
    and `${m.c}` threw "Cannot read properties of undefined (reading 'c')". */
 const SRC_FALLBACK={l:"src_other",c:"var(--ink-faint)",b:"var(--line-soft)",i:'<circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>'};
 const srcChip=s=>{const m=SRC[s]||SRC_FALLBACK;return `<span class="chip" style="color:${m.c};background:${m.b}"><svg viewBox="0 0 24 24" fill="none">${m.i}</svg>${t(m.l)}</span>`;};
-const bkChip=s=>{const m=BK_ST[s];return `<span class="chip" style="color:${m.c};background:${m.b}"><span class="dot" style="background:${m.c}"></span>${t(m.l)}</span>`;};
+const BK_ST_FALLBACK={l:"src_other",c:"var(--ink-faint)",b:"var(--line-soft)"};
+const bkChip=s=>{const m=BK_ST[s]||BK_ST_FALLBACK;return `<span class="chip" style="color:${m.c};background:${m.b}"><span class="dot" style="background:${m.c}"></span>${t(m.l)}</span>`;};
 const vipChip=()=>`<span class="chip" style="color:var(--amber);background:var(--amber-tint)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 6.3 6.9.9-5 4.8 1.2 6.8L12 17.8 5.9 20.8 7 14l-5-4.8 6.9-.9z"/></svg>${t('vip')}</span>`;
 /* same weight/prominence as vipChip() (same .chip base, same icon+text shape)
    but orange instead of amber so the two read as distinct badges sitting
