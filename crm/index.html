@@ -829,10 +829,13 @@
           </div>
           <div class="card-b">
             <div id="reportMsg" style="font-size:12.5px;font-weight:600;margin-bottom:10px"></div>
-            <button class="btn btn-blue" id="downloadReportBtn" onclick="downloadMonthlyReport()">
-              <svg viewBox="0 0 24 24" fill="none"><path d="M12 3v13m0 0l-4-4m4 4l4-4M4 18v2a1 1 0 001 1h14a1 1 0 001-1v-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span data-i="downloadReport">Download Monthly Report</span>
-            </button>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-blue" id="downloadReportBtn" onclick="downloadMonthlyReport()">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M12 3v13m0 0l-4-4m4 4l4-4M4 18v2a1 1 0 001 1h14a1 1 0 001-1v-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span data-i="downloadReport">Download Monthly Report</span>
+              </button>
+              <button class="btn btn-ghost" id="downloadDailyReportBtn" onclick="downloadDailyReport()"><span data-i="downloadDailyReport">Download Daily Report</span></button>
+            </div>
           </div>
         </div>
         <div class="card" style="margin-top:18px">
@@ -1372,6 +1375,7 @@ const I18N={
   changePw:"Change login password", changePwSub:"Update the shared login password. Requires the owner PIN.",
   monthlyReport:"Monthly report", monthlyReportSub:"Download a PDF summary of this month's activity.",
   downloadReport:"Download Monthly Report", reportGenerating:"Generating report…", reportReady:"Report downloaded.",
+  downloadDailyReport:"Download Daily Report", dailyReportTitle:"Sayed Ali Barber Shop — Daily Report",
   reportTitle:"Sayed Ali Barber Shop — Monthly Report", reportRevenueCollected:"Revenue collected",
   reportVisits:"Visits / cuts", reportAvgRating:"Average rating", reportTopClients:"Top clients this month",
   reportBarberPerf:"Barber performance", reportPayLaterOwed:"Pending Pay Later owed (all-time)",
@@ -1383,7 +1387,7 @@ const I18N={
   floorTag:"Station", noFloorTag:"Not assigned",
   cashierOnlyCheckout:"This tablet is set to Cashier — it can only check clients out.",
   notCashierStation:"Only the Cashier station can check clients out.",
-  stationReports:"Station reports", stationReportsSub:"Download a PDF activity report for one station.",
+  stationReports:"Tablet reports", stationReportsSub:"Download a PDF activity report for one station.",
   downloadFloor1Report:"1st Floor report", downloadFloor2Report:"2nd Floor report", downloadCashierReport:"Cashier report",
   stationReportTitle:"Sayed Ali Barber Shop — {station} Report",
   reportCheckins:"Check-ins", reportCheckouts:"Checkouts", reportRatingsCollected:"Ratings collected",
@@ -1533,6 +1537,7 @@ const I18N={
   changePw:"تغيير كلمة مرور الدخول", changePwSub:"عدّل كلمة مرور الدخول المشتركة. بتتطلب كود المالك.",
   monthlyReport:"التقرير الشهري", monthlyReportSub:"حمّل ملخص PDF لنشاط الشهر ده.",
   downloadReport:"تحميل التقرير الشهري", reportGenerating:"جاري إنشاء التقرير…", reportReady:"تم تحميل التقرير.",
+  downloadDailyReport:"تحميل التقرير اليومي", dailyReportTitle:"صالون سيد علي للحلاقة — التقرير اليومي",
   reportTitle:"صالون سيد علي للحلاقة — التقرير الشهري", reportRevenueCollected:"الإيراد المحصّل",
   reportVisits:"الزيارات / القصات", reportAvgRating:"متوسط التقييم", reportTopClients:"أفضل العملاء الشهر ده",
   reportBarberPerf:"أداء الحلاقين", reportPayLaterOwed:"مبالغ الدفع لاحقًا المستحقة (كل الفترة)",
@@ -1544,7 +1549,7 @@ const I18N={
   floorTag:"المحطة", noFloorTag:"غير محددة",
   cashierOnlyCheckout:"التابلت ده متحدد كـ كاشير — بس يقدر يقفل الحسابات. مفيش حاجة تانية.",
   notCashierStation:"قفل الحساب (الخروج) بس بتاع محطة الكاشير.",
-  stationReports:"تقارير المحطات", stationReportsSub:"حمّل تقرير PDF لنشاط محطة واحدة.",
+  stationReports:"تقارير التابلتات", stationReportsSub:"حمّل تقرير PDF لنشاط محطة واحدة.",
   downloadFloor1Report:"تقرير الدور الأول", downloadFloor2Report:"تقرير الدور الثاني", downloadCashierReport:"تقرير الكاشير",
   stationReportTitle:"صالون سيد علي للحلاقة — تقرير {station}",
   reportCheckins:"تسجيلات الدخول", reportCheckouts:"عمليات الحساب", reportRatingsCollected:"التقييمات المجمّعة",
@@ -3959,7 +3964,7 @@ function buildReportData(){
    font-family lists both an Arabic-capable and a Latin-capable font so the
    browser picks the right one per character regardless of what script a
    given name turns out to be in. */
-function buildReportHtml(data, isRtl){
+function buildReportHtml(data, isRtl, titleKey='reportTitle'){
  const rowsHtml = (rows, empty)=> rows.length ? rows.map(r=>`
    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #eee;font-size:14px">
      <span>${r.label}</span><span style="font-weight:700">${r.value}</span>
@@ -3967,7 +3972,7 @@ function buildReportHtml(data, isRtl){
  const sectionHead=txt=>`<div style="font-size:16px;font-weight:700;border-bottom:2px solid #ccc;padding-bottom:6px;margin:22px 0 10px">${txt}</div>`;
 
  return `
-  <div style="font-size:22px;font-weight:800;margin-bottom:6px">${t('reportTitle')}</div>
+  <div style="font-size:22px;font-weight:800;margin-bottom:6px">${t(titleKey)}</div>
   <div style="font-size:13px;color:#888;margin-bottom:22px">${data.monthLabel} &nbsp;·&nbsp; ${t('reportGeneratedOn')}: ${data.generatedOn}</div>
 
   ${sectionHead(t('reportOverview'))}
@@ -4034,6 +4039,76 @@ async function downloadMonthlyReport(){
  }finally{
    btn.disabled=false;
  }
+}
+
+/* ================= DAILY REPORT (same technique as the monthly report) ================= */
+function buildDailyReportData(){
+  const s = ovStats || computeOversightStats();
+  const cal = calendarDateParts();
+  const now = cal ? new Date(cal.y,cal.m-1,cal.d) : new Date();
+  let visitCount=0, ratingSum=0, ratingCount=0, revenueCollected=0;
+  const byClientToday={};
+  clients.forEach(c=>c.visits.forEach(v=>{
+    if(daysSince(v.ts)!==0) return;
+    visitCount++;
+    if(v.rating!=null){ ratingSum+=v.rating; ratingCount++; }
+    const isCollected = v.payMethod!=='pay later' || !!v.payLaterSettledAt;
+    const gross=v.svcs.reduce((a,x)=>a+x.p,0);
+    if(isCollected) revenueCollected += gross-(v.discount||0);
+    const row=byClientToday[c.id]||(byClientToday[c.id]={visitCount:0,spent:0});
+    row.visitCount++; row.spent+=gross;
+  }));
+  const topClients=Object.keys(byClientToday).map(idStr=>{
+    const id=Number(idStr), c=clients.find(x=>x.id===id), row=byClientToday[idStr];
+    return { id, name:c.name, vip:c.vip, visitCount:row.visitCount, spent:row.spent };
+  }).sort((a,b)=>b.spent-a.spent).slice(0,5);
+  const owedRows = clients.map(c=>({name:c.name, owed:clientOwed(c)})).filter(r=>r.owed>0).sort((a,b)=>b.owed-a.owed);
+  return {
+    monthLabel: fmtDate(now.getTime()),
+    revenueCollected, visitCount,
+    avgRating: ratingCount>0 ? Math.round((ratingSum/ratingCount)*100)/100 : null,
+    ratingCount, topClients,
+    barberPerformance: s.barberPerformance||[],
+    owedRows, totalOwed: owedRows.reduce((a,r)=>a+r.owed,0),
+    generatedOn: fmtDate(Date.now())
+  };
+}
+function dailyReportFilename(){
+  const cal=calendarDateParts();
+  const d=cal?new Date(cal.y,cal.m-1,cal.d):new Date();
+  return `Sayed-Ali-Daily-Report-${String(d.getDate()).padStart(2,'0')}-${MONTHS_EN[d.getMonth()]}-${d.getFullYear()}.pdf`;
+}
+async function downloadDailyReport(){
+  const btn=document.getElementById('downloadDailyReportBtn'), msg=document.getElementById('reportMsg');
+  if(btn) btn.disabled=true;
+  if(msg){ msg.style.color='var(--ink-soft)'; msg.textContent=t('reportGenerating'); }
+  try{
+    const data=buildDailyReportData();
+    const isRtl = lang==='ar';
+    const container=document.createElement('div');
+    container.style.cssText=`position:fixed;top:-99999px;left:-99999px;width:700px;background:#fff;padding:36px;direction:${isRtl?'rtl':'ltr'};text-align:${isRtl?'right':'left'};font-family:'Inter',Almarai,'IBM Plex Sans Arabic',sans-serif;color:#111;`;
+    container.innerHTML=buildReportHtml(data, isRtl, 'dailyReportTitle');
+    document.body.appendChild(container);
+    const canvas = await html2canvas(container, {scale:2, backgroundColor:'#ffffff'});
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({unit:'pt', format:'a4'});
+    const pageW=doc.internal.pageSize.getWidth(), pageH=doc.internal.pageSize.getHeight();
+    const mx=36, my=36, imgW=pageW-mx*2, imgH=canvas.height*imgW/canvas.width;
+    const imgData=canvas.toDataURL('image/png');
+    let heightLeft=imgH, position=my;
+    doc.addImage(imgData,'PNG',mx,position,imgW,imgH);
+    heightLeft-=(pageH-my*2);
+    while(heightLeft>0){ doc.addPage(); position=my-(imgH-heightLeft); doc.addImage(imgData,'PNG',mx,position,imgW,imgH); heightLeft-=(pageH-my*2); }
+    doc.save(dailyReportFilename());
+    document.body.removeChild(container);
+    if(msg){ msg.style.color='var(--green)'; msg.textContent=t('reportReady'); }
+    toast(t('reportReady'));
+  }catch(e){
+    if(msg){ msg.style.color='var(--red)'; msg.textContent=e.message||String(e); }
+    toastErr(e.message||String(e));
+  }finally{
+    if(btn) btn.disabled=false;
+  }
 }
 
 /* ================= STATION REPORTS (per-floor monthly PDF, same technique as the monthly report) ================= */
