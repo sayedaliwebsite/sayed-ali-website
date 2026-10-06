@@ -972,6 +972,7 @@
         </div>
       </div>
       <div class="fg"><label data-i="fNotes">Preferences / notes</label><textarea id="vNotes" data-i-ph="phNotes" placeholder="Usual style, preferred barber, allergies…"></textarea></div>
+      <div class="fg"><label data-i="fArea">Area</label><input id="vArea" /></div>
     </div>
     <div class="mf">
       <button class="btn btn-ghost" onclick="cancelVisit()" data-i="cancel">Cancel</button>
@@ -1007,6 +1008,7 @@
         <span data-i="addService">Add another service</span>
       </button>
       <div class="fg" style="margin-top:16px"><label data-i="fDeposit">Deposit paid in advance</label><input type="number" id="bkDeposit" placeholder="0" min="0" oninput="blockNegativeInput(this)" onkeydown="blockMinusKey(event)" /></div>
+      <div class="fg" style="margin-top:16px"><label data-i="fArea">Area</label><input id="bkArea" /></div>
       <div class="fg" style="margin-top:16px"><label data-i="fSource">Booked via</label><select id="bkSrc"></select></div>
       <div class="fg" id="bkStatusRow" style="display:none"><label data-i="fStatus">Status</label><select id="bkStatus"></select></div>
     </div>
@@ -1027,6 +1029,7 @@
         <div class="fg"><label data-i="fPhone">Phone</label><input id="leadPhone" dir="ltr" placeholder="01— —— ————" /></div>
       </div>
       <div class="fg"><label data-i="fSource">Source</label><select id="leadSrc"></select></div>
+      <div class="fg"><label data-i="fArea">Area</label><input id="leadArea" /></div>
       <div class="fg"><label data-i="fMessage">Message / note</label><textarea id="leadMsg"></textarea></div>
     </div>
     <div class="mf">
@@ -1047,6 +1050,7 @@
       </div>
       <div class="fg"><label data-i="fBirthday">Birthday (optional)</label><input id="ecBday" placeholder="DD/MM" /></div>
       <div class="fg"><label data-i="fNotes">Preferences / notes</label><textarea id="ecNotes"></textarea></div>
+      <div class="fg"><label data-i="fArea">Area</label><input id="ecArea" /></div>
       <div class="fg" style="display:flex;align-items:center;gap:9px">
         <input type="checkbox" id="ecVip" style="width:auto" />
         <label for="ecVip" style="margin:0;cursor:pointer" data-i="fVip">VIP client</label>
@@ -1217,7 +1221,7 @@ const I18N={
   leadsNote:"Leads are not clients. A profile is only created when they walk in.",
   thClient:"Client", thLast:"Last visit", thDid:"What they did", thBarber:"Barber", thVisits:"Visits", thSpent:"Total spent",
   logVisit:"Log a visit", logVisitSub:"Reception desk — the client is here now.",
-  fPhone:"Phone", fName:"Name", phName:"Client name", fBarber:"Barber", fServices:"Services done today",
+  fPhone:"Phone", fName:"Name", phName:"Client name", fBarber:"Barber", fServices:"Services done today", fArea:"Area",
   addService:"Add another service", fNotes:"Preferences / notes", phNotes:"Usual style, preferred barber, allergies…",
   totalPaid:"Total paid", cancel:"Cancel", saveVisit:"Save visit",
   navShop:"In the shop",
@@ -1367,7 +1371,7 @@ const I18N={
   leadsNote:"العملاء المحتملين ليسوا عملاء — الملف يُفتح فقط لما العميل يجي الصالون.",
   thClient:"العميل", thLast:"آخر زيارة", thDid:"اللي عمله", thBarber:"الحلاق", thVisits:"الزيارات", thSpent:"إجمالي المدفوع",
   logVisit:"تسجيل زيارة", logVisitSub:"الاستقبال — العميل موجود في الصالون دلوقتي.",
-  fPhone:"الهاتف", fName:"الاسم", phName:"اسم العميل", fBarber:"الحلاق", fServices:"الخدمات اللي اتعملت النهاردة",
+  fPhone:"الهاتف", fName:"الاسم", phName:"اسم العميل", fBarber:"الحلاق", fServices:"الخدمات اللي اتعملت النهاردة", fArea:"المنطقة",
   addService:"إضافة خدمة أخرى", fNotes:"ملاحظات", phNotes:"القصة المعتادة، الحلاق المفضل، حساسية…",
   totalPaid:"إجمالي المدفوع", cancel:"إلغاء", saveVisit:"حفظ الزيارة",
   navShop:"في الصالون",
@@ -1737,7 +1741,7 @@ function mapLead(row){
      renderAll() inside apiAction(), is what "Cannot read properties of
      undefined (reading 'c')" came from when saving a service. */
   return { id:Number(row.id), flag:row.status, following_up:!!Number(row.following_up), note:row.note||'', src:row.source,
-    name:row.name||'', phone:row.phone||'', msg:row.message||'', ts:parseSqlDate(row.created_at) };
+    name:row.name||'', phone:row.phone||'', msg:row.message||'', ts:parseSqlDate(row.created_at), area:row.area||'' };
 }
 /* bookings.wants now stores a JSON-encoded array of {service_name, detail,
    staff} lines (same shape as in_shop.services) instead of the old free-text
@@ -1764,7 +1768,7 @@ function mapBooking(row){
   return { id:Number(row.id), name:row.name, phone:row.phone, src:row.source||'walkin',
     time:row.booking_time, day:bookingDayCategory(row.booking_day), date:row.booking_day||'',
     svcs: svcs||[], legacyWant: svcs===null ? (row.wants||'') : '', status:row.status,
-    deposit: row.deposit_amount!=null ? Number(row.deposit_amount) : null };
+    deposit: row.deposit_amount!=null ? Number(row.deposit_amount) : null, area:row.area||'' };
 }
 function mapVisit(v){
   return { id:Number(v.id), ts:parseSqlDate(v.visited_at), barber:v.barber,
@@ -1778,7 +1782,7 @@ function mapClient(row){
   return { id:Number(row.id), name:row.name, phone:row.phone||'', src:row.source||'walkin',
     vip:!!Number(row.vip), bday:row.birthday||'',
     followedUp: row.followed_up_at ? fmtDate(parseSqlDate(row.followed_up_at)) : null,
-    notes:row.notes||'—', visits:(row.visits||[]).map(mapVisit) };
+    notes:row.notes||'—', area:row.area||'', visits:(row.visits||[]).map(mapVisit) };
 }
 /* Same digit-stripping normalization api/config.php's phone_norm() used
    server-side on insert/update -- there's no DB trigger doing it now that
@@ -1792,7 +1796,7 @@ function mapInShop(row){
     src:row.source||'walkin', mergeLeadId: row.merge_lead_id?Number(row.merge_lead_id):null,
     /* carried forward from an accepted booking match at check-in (see
        saveVisit()) so it's available when this queue entry reaches checkout */
-    deposit: row.deposit_amount!=null ? Number(row.deposit_amount) : null };
+    deposit: row.deposit_amount!=null ? Number(row.deposit_amount) : null, area:row.area||'' };
 }
 
 async function loadLeads(){
@@ -2402,7 +2406,7 @@ function delLead(id){
    Same modal pattern as openBooking()/saveBooking(). */
 function openAddLead(){
  document.getElementById('leadSrc').innerHTML=['whatsapp','instagram','facebook','call','walkin'].map(s=>`<option value="${s}">${t(SRC[s].l)}</option>`).join('');
- ['leadName','leadPhone','leadMsg'].forEach(i=>document.getElementById(i).value='');
+ ['leadName','leadPhone','leadMsg','leadArea'].forEach(i=>document.getElementById(i).value='');
  document.getElementById('leadScrim').classList.add('on');
 }
 function closeAddLead(){ document.getElementById('leadScrim').classList.remove('on'); }
@@ -2411,6 +2415,7 @@ async function saveNewLead(){
  const phone=document.getElementById('leadPhone').value.trim();
  const src=document.getElementById('leadSrc').value;
  const msg=document.getElementById('leadMsg').value.trim();
+ const area=document.getElementById('leadArea').value.trim();
  const missing=[];
  if(!name) missing.push(t('fName'));
  if(!phone) missing.push(t('fPhone'));
@@ -2425,7 +2430,7 @@ async function saveNewLead(){
  if(phone && !isValidEgyptPhone(phone)){ toastErr(t('invalidPhone')); return; }
  /* status/following_up default to the same values every other lead row already
     carries (mapLead() reads status as the hot/normal flag, following_up as 0/1) */
- const payload={ name, phone, source:src, message:msg, status:'normal', following_up:0 };
+ const payload={ name, phone, source:src, message:msg, status:'normal', following_up:0, area };
  const ok=await apiAction(t('leadAdded'), async ()=>{ const {error}=await sb.from('leads').insert(payload); if(error) throw new Error(error.message); }, loadLeads);
  if(ok) closeAddLead();
 }
@@ -2512,7 +2517,7 @@ async function setBk(id,st){
  const b=bookings.find(x=>x.id===id);
  /* carry the booking's already-picked services+staff straight into check-in
     (openVisit's prefill.svcs) so nothing has to be re-entered */
- const prefill={name:b.name, phone:b.phone, svcs:svcsToRows(b.svcs)};
+ const prefill={name:b.name, phone:b.phone, svcs:svcsToRows(b.svcs), area:b.area||''};
  const ok=await apiAction(st==='showed'?null:t('bookUpdated'), async ()=>{ const {error}=await sb.from('bookings').update({status:st}).eq('id',id); if(error) throw new Error(error.message); }, loadBookings);
  if(ok && st==='showed') openVisit(prefill);   /* showed up → check him into the queue */
 }
@@ -2562,7 +2567,7 @@ function openBooking(){
  document.getElementById('bkDay').innerHTML=days.map(d=>`<option value="${d.k}">${t(d.l)}</option>`).join('');
  document.getElementById('bkSrc').innerHTML=['whatsapp','instagram','facebook','call','website','walkin'].map(s=>`<option value="${s}">${t(SRC[s].l)}</option>`).join('');
  document.getElementById('bkStatusRow').style.display='none';
- ['bkName','bkPhone','bkTime','bkDate','bkDeposit'].forEach(i=>document.getElementById(i).value='');
+ ['bkName','bkPhone','bkTime','bkDate','bkDeposit','bkArea'].forEach(i=>document.getElementById(i).value='');
  document.getElementById('bkTimeTbd').checked=false;
  document.getElementById('bkTime').disabled=false;
  document.getElementById('bkDate').min=tomorrowStr();
@@ -2594,6 +2599,7 @@ function openBookingEdit(id){
  document.getElementById('bkPhone').value=b.phone||'';
  document.getElementById('bkSrc').value=b.src||'walkin';
  document.getElementById('bkDeposit').value=b.deposit!=null?b.deposit:'';
+ document.getElementById('bkArea').value=b.area||'';
  renderSvcLines();
 
  const isToday=b.date===serverBusinessDate;
@@ -2653,7 +2659,8 @@ async function saveBooking(){
     and "deposit of 0" stay distinguishable in the data */
  const depositRaw=document.getElementById('bkDeposit').value.trim();
  const deposit=depositRaw===''?null:(parseInt(depositRaw)||0);
- const payload={ name, phone, source:src, booking_time:finalTime, booking_day:bookingDay, wants:JSON.stringify(svcs), deposit_amount:deposit };
+ const area=document.getElementById('bkArea').value.trim();
+ const payload={ name, phone, source:src, booking_time:finalTime, booking_day:bookingDay, wants:JSON.stringify(svcs), deposit_amount:deposit, area };
  let ok;
  if(bkEditId){
    /* setBk() (the direct "Showed up" button on the card) only ever fires this
@@ -2819,7 +2826,7 @@ function closeDrawer(){ document.getElementById('scrim').classList.remove('on');
 function checkInFromDrawer(id){
  const c=clientById(id);
  closeDrawer();
- openVisit({name:c.name, phone:c.phone, notes:c.notes==='—'?'':c.notes});
+ openVisit({name:c.name, phone:c.phone, notes:c.notes==='—'?'':c.notes, area:c.area||''});
 }
 
 /* ---- edit client ---- */
@@ -2830,6 +2837,7 @@ function openEC(id){
  document.getElementById('ecPhone').value=c.phone;
  document.getElementById('ecBday').value=c.bday||'';
  document.getElementById('ecNotes').value=c.notes==='—'?'':c.notes;
+ document.getElementById('ecArea').value=c.area||'';
  document.getElementById('ecVip').checked=!!c.vip;
  document.getElementById('ecScrim').classList.add('on');
 }
@@ -2839,11 +2847,12 @@ async function saveEC(){
  const phone=document.getElementById('ecPhone').value.trim();
  const bday=document.getElementById('ecBday').value.trim();
  const notes=document.getElementById('ecNotes').value.trim()||'—';
+ const area=document.getElementById('ecArea').value.trim();
  const vip=document.getElementById('ecVip').checked;
  if(phone && !isValidEgyptPhone(phone)){ toastErr(t('invalidPhone')); return; }
  const ok=await apiAction(t('saved'), async ()=>{
    const {error}=await sb.from('clients').update({
-     name, phone, phone_norm:phoneNorm(phone), birthday:bday, notes, vip
+     name, phone, phone_norm:phoneNorm(phone), birthday:bday, notes, vip, area
    }).eq('id',ecId);
    if(error) throw new Error(error.message);
  }, loadClients);
@@ -3002,6 +3011,7 @@ function openVisit(prefill){
  document.getElementById('vPhone').value=prefill?prefill.phone:'';
  document.getElementById('vName').value=prefill?prefill.name:'';
  document.getElementById('vNotes').value=prefill&&prefill.notes?prefill.notes:'';
+ document.getElementById('vArea').value = prefill&&prefill.area ? prefill.area : '';
  fillBdaySelects();
  renderSvcLines(); checkMerge(); checkBookingMatch();
  if(prefill&&prefill.phone) onPhoneInput();
@@ -3254,6 +3264,7 @@ async function saveVisit(){
  if(phone && !isValidEgyptPhone(phone)){ toastErr(t('invalidPhone')); return; }
  const name=document.getElementById('vName').value.trim()|| (lang==='en'?'New Client':'عميل جديد');
  const notes=document.getElementById('vNotes').value.trim();
+ const area=document.getElementById('vArea').value.trim();
  const bdayDay=document.getElementById('vBdayDay').value, bdayMonth=document.getElementById('vBdayMonth').value;
  const bday=(bdayDay&&bdayMonth) ? `${bdayDay.padStart(2,'0')}/${bdayMonth.padStart(2,'0')}` : '';
  const svcs=svcRows.filter(r=>r.id).map(r=>{
@@ -3272,7 +3283,7 @@ async function saveVisit(){
    const ok=await apiAction(t('saved'), async ()=>{
      const {error}=await sb.from('in_shop').update({
        name, phone:phone||null, phone_norm:phone?phoneNorm(phone):null,
-       services:svcs, notes:notes||null, birthday:bday||null, barber:firstLineBarber
+       services:svcs, notes:notes||null, birthday:bday||null, barber:firstLineBarber, area:area||null
      }).eq('id',id);
      if(error) throw new Error(error.message);
    }, loadInShop);
@@ -3284,7 +3295,7 @@ async function saveVisit(){
    const {error}=await sb.from('in_shop').insert({
      name, phone:phoneRaw, phone_norm:phoneRaw?phoneNorm(phoneRaw):null,
      barber:firstLineBarber, state:'waiting', services:svcs,
-     notes:notes||null, birthday:bday||null,
+     notes:notes||null, birthday:bday||null, area:area||null,
      source: mergeLead?mergeLead.src:'walkin',
      merge_lead_id: mergeLead?mergeLead.id:null,
      /* carried forward only when the booking match banner was actually
@@ -3368,6 +3379,7 @@ function openEditQueue(id){
  document.getElementById('vPhone').disabled=false;
  document.getElementById('vName').disabled=false;
  document.getElementById('vNotes').value=x.notes||'';
+ document.getElementById('vArea').value=x.area||'';
  fillBdaySelects();
  if(x.bday){
    const [d,m]=x.bday.split('/').map(Number);
@@ -3543,14 +3555,14 @@ async function finishVisit(rating){
    if(clientId===null){
      const {data:created,error:createErr}=await sb.from('clients').insert({
        name:x.name, phone:x.phone||null, phone_norm:checkoutNorm,
-       birthday:x.bday||null, notes:x.notes||null, source:x.src||null
+       birthday:x.bday||null, notes:x.notes||null, source:x.src||null, area:x.area||null
      }).select('id').single();
      if(createErr) throw new Error(createErr.message);
      clientId=Number(created.id);
-   } else if(x.notes){
-     /* only overwrite when this check-in actually captured a note, so a
-        blank visit doesn't wipe out a note already saved on the profile */
-     const {error:noteErr}=await sb.from('clients').update({notes:x.notes}).eq('id',clientId);
+   } else if(x.notes || x.area){
+     /* only overwrite fields this check-in actually captured, so a blank
+        visit doesn't wipe out a note/area already saved on the profile */
+     const {error:noteErr}=await sb.from('clients').update({...(x.notes?{notes:x.notes}:{}), ...(x.area?{area:x.area}:{})}).eq('id',clientId);
      if(noteErr) throw new Error(noteErr.message);
    }
 
