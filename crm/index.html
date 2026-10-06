@@ -911,7 +911,7 @@
         </div>
       </section>
 
-      <!-- STAFF & SERVICES (owner only) -->
+      <!-- STAFF & SERVICES (view: staff & owner; add/edit/delete/assign: owner only) -->
       <section id="v-team" class="view">
         <div class="tools">
           <div class="seg" id="teamSeg"></div>
@@ -920,7 +920,7 @@
           <div class="card">
             <div class="card-h">
               <h3 data-i="staffTabLabel">Staff</h3>
-              <button class="btn btn-blue btn-sm" onclick="openStaffForm(null)">
+              <button class="btn btn-blue btn-sm" id="teamAddStaffBtn" onclick="openStaffForm(null)">
                 <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
                 <span data-i="addStaffBtn">Add staff</span>
               </button>
@@ -932,7 +932,7 @@
           <div class="card">
             <div class="card-h">
               <h3 data-i="servicesTabLabel">Services</h3>
-              <button class="btn btn-blue btn-sm" onclick="openServiceForm(null)">
+              <button class="btn btn-blue btn-sm" id="teamAddSvcBtn" onclick="openServiceForm(null)">
                 <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
                 <span data-i="addSvcBtn">Add service</span>
               </button>
@@ -2099,7 +2099,7 @@ let view='dash';
    (check-in, queue actions, edit, delete) on top of it; nothing is taken away. */
 function VIEWS(){
  if(isOwner()) return [ALL_VIEWS[0], OWNER_VIEW, ALL_VIEWS[2], ALL_VIEWS[1], ALL_VIEWS[4], ALL_VIEWS[3], TEAM_VIEW]; // dash, oversight, shop, leads, clients, bookings, team
- return ALL_VIEWS;
+ return [...ALL_VIEWS, TEAM_VIEW];
 }
 function navBtnsHTML(closeMenuOnClick){
  let vs=VIEWS();
@@ -2277,7 +2277,7 @@ async function onOwnerIdleTimeout(){
 ['mousemove','keydown','mousedown','touchstart','wheel'].forEach(ev=>
  document.addEventListener(ev, bumpOwnerIdleTimer, {passive:true}));
 function go(k){
- if((k==='owner'||k==='team') && !isOwner()){ toast(t('noAccess')); return; }
+ if(k==='owner' && !isOwner()){ toast(t('noAccess')); return; }
  if(k!=='shop' && currentFloor==='cashier' && !isOwner()){ toastErr(t('cashierOnlyCheckout')); return; }
  view=k;
  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
@@ -4319,6 +4319,9 @@ function renderTeam(){
  renderTeamSeg();
  document.getElementById('teamStaffTab').style.display = teamTab==='staff' ? '' : 'none';
  document.getElementById('teamServicesTab').style.display = teamTab==='services' ? '' : 'none';
+ const canMutate=isOwner();
+ document.getElementById('teamAddStaffBtn').style.display = canMutate ? '' : 'none';
+ document.getElementById('teamAddSvcBtn').style.display = canMutate ? '' : 'none';
 
  document.getElementById('staffList').innerHTML = staff.length ? staff.map(st=>`
   <div class="team-row${st.active?'':' inactive'}">
@@ -4328,12 +4331,12 @@ function renderTeam(){
       <div class="team-tags">${st.services.length? st.services.map(s=>`<span class="chip" style="color:var(--blue);background:var(--blue-tint)">${lang==='en'?s.name_en:s.name_ar}</span>`).join('') : `<span style="font-size:12px;color:var(--ink-faint)">${t('noServicesAssigned')}</span>`}</div>
       ${fmtShiftLabel(st)?`<div style="font-size:12px;color:var(--ink-faint);margin-top:5px">${fmtShiftLabel(st)}</div>`:''}
     </div>
-    <div class="team-acts">
+    ${canMutate?`<div class="team-acts">
       <button class="btn btn-ghost btn-sm" onclick="openAssignSvc(${st.id})">${t('assignServicesTitle')}</button>
       <button class="btn btn-ghost btn-sm" onclick="openStaffForm(${st.id})">${t('rename')}</button>
       <button class="btn btn-ghost btn-sm" onclick="toggleStaffActive(${st.id},${st.active?0:1})">${st.active?t('deactivate'):t('reactivate')}</button>
       <button class="icon-btn" onclick="confirmDelStaff(${st.id})" title="${t('deleteStaffBtn')}">${DELETE_ICON}</button>
-    </div>
+    </div>`:''}
   </div>`).join('') : `<div class="empty">${t('noStaffYet')}</div>`;
 
  document.getElementById('servicesList').innerHTML = services.length ? services.map(s=>`
@@ -4342,11 +4345,11 @@ function renderTeam(){
       <div class="nm">${lang==='en'?s.name_en:s.name_ar}${s.active?'':` <span class="chip" style="color:var(--ink-faint);background:var(--line-soft)">${t('inactiveTag')}</span>`}</div>
       <div style="font-size:12px;color:var(--ink-faint);margin-top:3px">${s.name_en} · ${s.name_ar}</div>
     </div>
-    <div class="team-acts">
+    ${canMutate?`<div class="team-acts">
       <button class="btn btn-ghost btn-sm" onclick="openServiceForm(${s.id})">${t('rename')}</button>
       <button class="btn btn-ghost btn-sm" onclick="toggleServiceActive(${s.id},${s.active?0:1})">${s.active?t('deactivate'):t('reactivate')}</button>
       <button class="icon-btn" onclick="confirmDelService(${s.id})" title="${t('deleteServiceBtn')}">${DELETE_ICON}</button>
-    </div>
+    </div>`:''}
   </div>`).join('') : `<div class="empty">${t('noServicesYet')}</div>`;
 }
 
