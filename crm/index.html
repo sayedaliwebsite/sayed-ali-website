@@ -4319,9 +4319,6 @@ function renderTeam(){
  renderTeamSeg();
  document.getElementById('teamStaffTab').style.display = teamTab==='staff' ? '' : 'none';
  document.getElementById('teamServicesTab').style.display = teamTab==='services' ? '' : 'none';
- const canMutate=isOwner();
- document.getElementById('teamAddStaffBtn').style.display = canMutate ? '' : 'none';
- document.getElementById('teamAddSvcBtn').style.display = canMutate ? '' : 'none';
 
  document.getElementById('staffList').innerHTML = staff.length ? staff.map(st=>`
   <div class="team-row${st.active?'':' inactive'}">
@@ -4331,12 +4328,12 @@ function renderTeam(){
       <div class="team-tags">${st.services.length? st.services.map(s=>`<span class="chip" style="color:var(--blue);background:var(--blue-tint)">${lang==='en'?s.name_en:s.name_ar}</span>`).join('') : `<span style="font-size:12px;color:var(--ink-faint)">${t('noServicesAssigned')}</span>`}</div>
       ${fmtShiftLabel(st)?`<div style="font-size:12px;color:var(--ink-faint);margin-top:5px">${fmtShiftLabel(st)}</div>`:''}
     </div>
-    ${canMutate?`<div class="team-acts">
+    <div class="team-acts">
       <button class="btn btn-ghost btn-sm" onclick="openAssignSvc(${st.id})">${t('assignServicesTitle')}</button>
       <button class="btn btn-ghost btn-sm" onclick="openStaffForm(${st.id})">${t('rename')}</button>
       <button class="btn btn-ghost btn-sm" onclick="toggleStaffActive(${st.id},${st.active?0:1})">${st.active?t('deactivate'):t('reactivate')}</button>
       <button class="icon-btn" onclick="confirmDelStaff(${st.id})" title="${t('deleteStaffBtn')}">${DELETE_ICON}</button>
-    </div>`:''}
+    </div>
   </div>`).join('') : `<div class="empty">${t('noStaffYet')}</div>`;
 
  document.getElementById('servicesList').innerHTML = services.length ? services.map(s=>`
@@ -4345,11 +4342,11 @@ function renderTeam(){
       <div class="nm">${lang==='en'?s.name_en:s.name_ar}${s.active?'':` <span class="chip" style="color:var(--ink-faint);background:var(--line-soft)">${t('inactiveTag')}</span>`}</div>
       <div style="font-size:12px;color:var(--ink-faint);margin-top:3px">${s.name_en} · ${s.name_ar}</div>
     </div>
-    ${canMutate?`<div class="team-acts">
+    <div class="team-acts">
       <button class="btn btn-ghost btn-sm" onclick="openServiceForm(${s.id})">${t('rename')}</button>
       <button class="btn btn-ghost btn-sm" onclick="toggleServiceActive(${s.id},${s.active?0:1})">${s.active?t('deactivate'):t('reactivate')}</button>
       <button class="icon-btn" onclick="confirmDelService(${s.id})" title="${t('deleteServiceBtn')}">${DELETE_ICON}</button>
-    </div>`:''}
+    </div>
   </div>`).join('') : `<div class="empty">${t('noServicesYet')}</div>`;
 }
 
@@ -4367,7 +4364,6 @@ function toggleStaffFormOffDay(d){
  renderStaffFormOffDays();
 }
 function openStaffForm(id){
- if(!ownerOnly()) return;
  staffFormId=id||null;
  const st=id?staff.find(x=>x.id===id):null;
  document.getElementById('staffFormTitle').textContent = st ? t('renameStaffTitle') : t('addStaffBtn');
@@ -4409,11 +4405,9 @@ async function saveStaffForm(){
 
 /* ---- staff: activate / deactivate / delete ---- */
 async function toggleStaffActive(id,active){
- if(!ownerOnly()) return;
  await apiAction(t('staffUpdated'), async ()=>{ const {error}=await sb.from('staff').update({active:!!active}).eq('id',id); if(error) throw new Error(error.message); }, ()=>Promise.all([loadStaff(),loadServices()]));
 }
 function confirmDelStaff(id){
- if(!ownerOnly()) return;
  askConfirm(t('confirmDelStaff'), t('yesDelete'), async ()=>{
    await apiAction(t('staffDeleted'), async ()=>{
      /* no DB-level cascade assumed, same as the old PHP transaction: clear the
@@ -4429,7 +4423,6 @@ function confirmDelStaff(id){
 /* ---- staff: assign services ---- */
 let assignSvcStaffId=null;
 function openAssignSvc(id){
- if(!ownerOnly()) return;
  assignSvcStaffId=id;
  const st=staff.find(x=>x.id===id);
  const assignedIds=new Set((st?st.services:[]).map(s=>s.id));
@@ -4459,7 +4452,6 @@ async function saveAssignSvc(){
 /* ---- services: add / rename ---- */
 let serviceFormId=null;   /* null = adding a new service, otherwise the id being renamed */
 function openServiceForm(id){
- if(!ownerOnly()) return;
  serviceFormId=id||null;
  const s=id?services.find(x=>x.id===id):null;
  document.getElementById('serviceFormTitle').textContent = s ? t('renameServiceTitle') : t('addSvcBtn');
@@ -4487,11 +4479,9 @@ async function saveServiceForm(){
 
 /* ---- services: activate / deactivate / delete ---- */
 async function toggleServiceActive(id,active){
- if(!ownerOnly()) return;
  await apiAction(t('serviceUpdated'), async ()=>{ const {error}=await sb.from('services').update({active:!!active}).eq('id',id); if(error) throw new Error(error.message); }, ()=>Promise.all([loadStaff(),loadServices()]));
 }
 function confirmDelService(id){
- if(!ownerOnly()) return;
  askConfirm(t('confirmDelService'), t('yesDelete'), async ()=>{
    await apiAction(t('serviceDeleted'), async ()=>{
      /* no DB-level cascade assumed, same as the old PHP transaction: clear the
