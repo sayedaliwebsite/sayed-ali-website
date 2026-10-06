@@ -687,6 +687,13 @@
   </div>
 </div>
 
+<div class="mscrim" id="floorPickerScrim" style="z-index:99999">
+  <div class="modal" style="width:420px;text-align:center;padding:10px">
+    <div class="mh"><h3 id="floorPickerTitle"></h3><p id="floorPickerSub"></p></div>
+    <div class="mb" id="floorPickerBtns" style="display:flex;flex-direction:column;gap:12px"></div>
+  </div>
+</div>
+
 <div class="app">
   <!-- SIDEBAR -->
   <aside class="side">
@@ -729,6 +736,7 @@
           <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
           <span data-i="newVisit">Check in</span>
         </button>
+        <span id="floorTag" onclick="openFloorPicker()" style="cursor:pointer;font-size:12px;padding:4px 10px;border-radius:999px;background:var(--line-soft);color:var(--ink-soft);margin-inline-end:8px"></span>
         <div class="who" id="who" onclick="logout()" style="cursor:pointer" title="Click to log out">SA</div>
       </div>
     </header>
@@ -822,6 +830,19 @@
               <svg viewBox="0 0 24 24" fill="none"><path d="M12 3v13m0 0l-4-4m4 4l4-4M4 18v2a1 1 0 001 1h14a1 1 0 001-1v-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
               <span data-i="downloadReport">Download Monthly Report</span>
             </button>
+          </div>
+        </div>
+        <div class="card" style="margin-top:18px">
+          <div class="card-h">
+            <h3 data-i="stationReports">Station reports</h3>
+            <span class="hint" data-i="stationReportsSub">Download a PDF activity report for one station.</span>
+          </div>
+          <div class="card-b">
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-ghost btn-sm" onclick="downloadStationReport('floor1')"><span data-i="downloadFloor1Report">1st Floor report</span></button>
+              <button class="btn btn-ghost btn-sm" onclick="downloadStationReport('floor2')"><span data-i="downloadFloor2Report">2nd Floor report</span></button>
+              <button class="btn btn-ghost btn-sm" onclick="downloadStationReport('cashier')"><span data-i="downloadCashierReport">Cashier report</span></button>
+            </div>
           </div>
         </div>
       </section>
@@ -1353,6 +1374,17 @@ const I18N={
   reportBarberPerf:"Barber performance", reportPayLaterOwed:"Pending Pay Later owed (all-time)",
   reportNoData:"No data", reportCuts:"cuts", reportGeneratedOn:"Generated on",
   reportOverview:"This Month", reportTotalOwed:"Total owed",
+  floor1Label:"1st Floor", floor2Label:"2nd Floor", cashierLabel:"Cashier",
+  chooseFloorTitle:"Which station is this tablet?",
+  chooseFloorSub:"This sets which station every check-in, booking, lead and checkout from this device is tagged with — and, for Cashier, restricts this tablet to checkout only. Pick carefully — you can change it later by tapping the station tag.",
+  floorTag:"Station", noFloorTag:"Not assigned",
+  cashierOnlyCheckout:"This tablet is set to Cashier — it can only check clients out.",
+  notCashierStation:"Only the Cashier station can check clients out.",
+  stationReports:"Station reports", stationReportsSub:"Download a PDF activity report for one station.",
+  downloadFloor1Report:"1st Floor report", downloadFloor2Report:"2nd Floor report", downloadCashierReport:"Cashier report",
+  stationReportTitle:"Sayed Ali Barber Shop — {station} Report",
+  reportCheckins:"Check-ins", reportCheckouts:"Checkouts", reportRatingsCollected:"Ratings collected",
+  reportBookingsMade:"Bookings created", reportLeadsCaptured:"Leads captured", reportClientsServed:"Clients served",
   fUsername:"Username",
   fNewPassword:"New password", fConfirmPassword:"Confirm new password", fOwnerPin:"Owner PIN",
   savePassword:"Save password", pwMismatch:"Passwords don't match.", pwTooShort:"Password must be at least 3 characters.",
@@ -1503,6 +1535,17 @@ const I18N={
   reportBarberPerf:"أداء الحلاقين", reportPayLaterOwed:"مبالغ الدفع لاحقًا المستحقة (كل الفترة)",
   reportNoData:"لا توجد بيانات", reportCuts:"قصة", reportGeneratedOn:"تاريخ الإنشاء",
   reportOverview:"نظرة عامة", reportTotalOwed:"الإجمالي",
+  floor1Label:"الدور الأول", floor2Label:"الدور الثاني", cashierLabel:"الكاشير",
+  chooseFloorTitle:"المحطة دي بتاعة تابلت مين؟",
+  chooseFloorSub:"الاختيار ده هيحدد إن كل تسجيل دخول وحجز وعميل محتمل وعملية حساب من الجهاز ده هتتسجل على المحطة دي — ولو اخترت كاشير، التابلت هيقفل على الحساب بس. اختار بعناية — تقدر تغيرها بعدين بالضغط على اسم المحطة.",
+  floorTag:"المحطة", noFloorTag:"غير محددة",
+  cashierOnlyCheckout:"التابلت ده متحدد كـ كاشير — بس يقدر يقفل الحسابات. مفيش حاجة تانية.",
+  notCashierStation:"قفل الحساب (الخروج) بس بتاع محطة الكاشير.",
+  stationReports:"تقارير المحطات", stationReportsSub:"حمّل تقرير PDF لنشاط محطة واحدة.",
+  downloadFloor1Report:"تقرير الدور الأول", downloadFloor2Report:"تقرير الدور الثاني", downloadCashierReport:"تقرير الكاشير",
+  stationReportTitle:"صالون سيد علي للحلاقة — تقرير {station}",
+  reportCheckins:"تسجيلات الدخول", reportCheckouts:"عمليات الحساب", reportRatingsCollected:"التقييمات المجمّعة",
+  reportBookingsMade:"الحجوزات اللي تمت", reportLeadsCaptured:"العملاء المحتملين اللي تم تسجيلهم", reportClientsServed:"العملاء اللي تم خدمتهم",
   fUsername:"اسم المستخدم",
   fNewPassword:"كلمة المرور الجديدة", fConfirmPassword:"تأكيد كلمة المرور الجديدة", fOwnerPin:"كود المالك",
   savePassword:"حفظ كلمة المرور", pwMismatch:"كلمتا المرور غير متطابقتين.", pwTooShort:"كلمة المرور لازم تكون 3 حروف على الأقل.",
@@ -1519,6 +1562,24 @@ let ownerUnlocked=false;   /* mirrors $_SESSION['owner_unlocked'] -- set once th
 const t=k=>I18N[lang][k];
 const isOwner=()=>role==='owner';
 function ownerOnly(fn){ if(!isOwner()){ toast(t('staffBlocked')); return false; } return true; }
+
+/* ================= STATION (device-local, not login-tied) ================= */
+const FLOORS=[{k:'floor1',l:'floor1Label'},{k:'floor2',l:'floor2Label'},{k:'cashier',l:'cashierLabel'}];
+const FLOOR_KEY='sa_crm_tablet_floor';
+let currentFloor=null;
+function loadDeviceFloor(){ try{ currentFloor=localStorage.getItem(FLOOR_KEY)||null; }catch(e){ currentFloor=null; } }
+function floorLabel(k){ const f=FLOORS.find(x=>x.k===k); return f? t(f.l) : ''; }
+function setDeviceFloor(k){ currentFloor=k; try{ localStorage.setItem(FLOOR_KEY,k); }catch(e){} closeFloorPicker(); renderFloorTag(); renderNav(); renderMNav(); renderShop(); }
+function renderFloorTag(){ const el=document.getElementById('floorTag'); if(!el) return; el.textContent = currentFloor ? floorLabel(currentFloor) : t('noFloorTag'); }
+function requireNonCashierAction(){ if(currentFloor==='cashier' && !isOwner()){ toastErr(t('cashierOnlyCheckout')); return false; } return true; }
+function requireCashierStation(){ if(currentFloor!=='cashier' && !isOwner()){ toastErr(t('notCashierStation')); return false; } return true; }
+function openFloorPicker(){
+  document.getElementById('floorPickerTitle').textContent=t('chooseFloorTitle');
+  document.getElementById('floorPickerSub').textContent=t('chooseFloorSub');
+  document.getElementById('floorPickerBtns').innerHTML=FLOORS.map(f=>`<button class="btn btn-blue" style="justify-content:center;padding:16px" onclick="setDeviceFloor('${f.k}')">${t(f.l)}</button>`).join('');
+  document.getElementById('floorPickerScrim').classList.add('on');
+}
+function closeFloorPicker(){ document.getElementById('floorPickerScrim').classList.remove('on'); }
 
 /* ================= meta ================= */
 const SRC={
@@ -1741,7 +1802,7 @@ function mapLead(row){
      renderAll() inside apiAction(), is what "Cannot read properties of
      undefined (reading 'c')" came from when saving a service. */
   return { id:Number(row.id), flag:row.status, following_up:!!Number(row.following_up), note:row.note||'', src:row.source,
-    name:row.name||'', phone:row.phone||'', msg:row.message||'', ts:parseSqlDate(row.created_at), area:row.area||'' };
+    name:row.name||'', phone:row.phone||'', msg:row.message||'', ts:parseSqlDate(row.created_at), area:row.area||'', floor:row.floor||'' };
 }
 /* bookings.wants now stores a JSON-encoded array of {service_name, detail,
    staff} lines (same shape as in_shop.services) instead of the old free-text
@@ -1768,7 +1829,8 @@ function mapBooking(row){
   return { id:Number(row.id), name:row.name, phone:row.phone, src:row.source||'walkin',
     time:row.booking_time, day:bookingDayCategory(row.booking_day), date:row.booking_day||'',
     svcs: svcs||[], legacyWant: svcs===null ? (row.wants||'') : '', status:row.status,
-    deposit: row.deposit_amount!=null ? Number(row.deposit_amount) : null, area:row.area||'' };
+    deposit: row.deposit_amount!=null ? Number(row.deposit_amount) : null, area:row.area||'',
+    floor:row.floor||'', createdAt:parseSqlDate(row.created_at) };
 }
 function mapVisit(v){
   return { id:Number(v.id), ts:parseSqlDate(v.visited_at), barber:v.barber,
@@ -1776,6 +1838,7 @@ function mapVisit(v){
     complaint:v.complaint||'',
     payMethod:v.pay_method||'cash', discount:Number(v.discount)||0, tip:Number(v.tip)||0,
     payLaterSettledAt: v.pay_later_settled_at||null,
+    floor:v.floor||'', checkoutFloor:v.checkout_floor||'',
     svcs:(v.services||[]).map(s=>({id:Number(s.id), n:s.service_name, d:s.detail||'', p:Number(s.price), staff:s.staff||''})) };
 }
 function mapClient(row){
@@ -1796,7 +1859,7 @@ function mapInShop(row){
     src:row.source||'walkin', mergeLeadId: row.merge_lead_id?Number(row.merge_lead_id):null,
     /* carried forward from an accepted booking match at check-in (see
        saveVisit()) so it's available when this queue entry reaches checkout */
-    deposit: row.deposit_amount!=null ? Number(row.deposit_amount) : null, area:row.area||'' };
+    deposit: row.deposit_amount!=null ? Number(row.deposit_amount) : null, area:row.area||'', floor:row.floor||'' };
 }
 
 async function loadLeads(){
@@ -1850,7 +1913,7 @@ async function loadClients(){
     let visitsByClient={};
     if(clientIds.length){
       const { data:visitRows, error:visitErr } = await sb.from('visits')
-        .select('id,client_id,visited_at,rating,complaint,pay_method,discount,tip,pay_later_settled_at,staff(name)')
+        .select('id,client_id,visited_at,rating,complaint,pay_method,discount,tip,pay_later_settled_at,floor,checkout_floor,staff(name)')
         .in('client_id', clientIds).order('visited_at', {ascending:false});
       if(visitErr) throw visitErr;
       const visitIds=(visitRows||[]).map(v=>v.id);
@@ -1869,6 +1932,7 @@ async function loadClients(){
       (visitRows||[]).forEach(v=>{
         const row={ id:v.id, visited_at:v.visited_at, rating:v.rating, complaint:v.complaint,
           pay_method:v.pay_method, discount:v.discount, tip:v.tip, pay_later_settled_at:v.pay_later_settled_at,
+          floor:v.floor, checkout_floor:v.checkout_floor,
           barber:v.staff?.name||'', services:svcByVisit[v.id]||[] };
         (visitsByClient[v.client_id]=visitsByClient[v.client_id]||[]).push(row);
       });
@@ -2030,7 +2094,9 @@ function VIEWS(){
  return ALL_VIEWS;
 }
 function navBtnsHTML(closeMenuOnClick){
- return VIEWS().map(v=>`
+ let vs=VIEWS();
+ if(currentFloor==='cashier' && !isOwner()) vs=vs.filter(v=>v.k==='shop');
+ return vs.map(v=>`
   <button class="${v.k===view?'on':''}" onclick="go('${v.k}')${closeMenuOnClick?';closeMenu()':''}">
     <svg viewBox="0 0 24 24" fill="none">${v.ic}</svg>
     <span>${t(v.i)}</span>
@@ -2088,6 +2154,10 @@ function applyRole(r){
  const ci=document.getElementById('checkinBtn');
  ci.classList.toggle('btn-blue',!isOwner());
  ci.classList.toggle('btn-ghost',isOwner());
+ const cashierTablet=currentFloor==='cashier' && !isOwner();
+ ci.style.display=cashierTablet?'none':'';
+ const searchBox=document.querySelector('.search');
+ if(searchBox) searchBox.style.display=cashierTablet?'none':'';
  if(isOwner()) view='owner';        /* unlocking Owner always lands on the control tower */
  else if(view==='owner'||view==='team') view='dash';  /* owner-only screens are never reachable from Staff */
  go(view);
@@ -2200,6 +2270,7 @@ async function onOwnerIdleTimeout(){
  document.addEventListener(ev, bumpOwnerIdleTimer, {passive:true}));
 function go(k){
  if((k==='owner'||k==='team') && !isOwner()){ toast(t('noAccess')); return; }
+ if(k!=='shop' && currentFloor==='cashier' && !isOwner()){ toastErr(t('cashierOnlyCheckout')); return; }
  view=k;
  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
  document.getElementById('v-'+k).classList.add('on');
@@ -2356,6 +2427,7 @@ async function toggleFollowing(id,val){ await apiAction(t('leadFlagged'), async 
    name+phone. Guards against duplicate bookings on repeat clicks by checking for an
    existing today's booking with the same phone before inserting. */
 async function markLeadBooked(id){
+ if(!requireNonCashierAction()) return;
  const l=leads.find(x=>x.id===id);
  if(!l) return;
  if(l.phone && bookings.some(b=>b.day==='today' && b.phone===l.phone)){
@@ -2396,6 +2468,7 @@ async function addLeadNote(id){
  await apiAction(null, async ()=>{ const {error}=await sb.from('leads').update({note:v.trim()}).eq('id',id); if(error) throw new Error(error.message); }, loadLeads);
 }
 function delLead(id){
+ if(!requireNonCashierAction()) return;
  if(!ownerOnly()) return;
  askConfirm(t('confirmDelLead'), t('yesDelete'), async ()=>{
    await apiAction(t('deletedLead'), async ()=>{ const {error}=await sb.from('leads').delete().eq('id',id); if(error) throw new Error(error.message); }, loadLeads);
@@ -2405,6 +2478,7 @@ function delLead(id){
    (WhatsApp/phone/Instagram) since there's no live API auto-creating leads.
    Same modal pattern as openBooking()/saveBooking(). */
 function openAddLead(){
+ if(!requireNonCashierAction()) return;
  document.getElementById('leadSrc').innerHTML=['whatsapp','instagram','facebook','call','walkin'].map(s=>`<option value="${s}">${t(SRC[s].l)}</option>`).join('');
  ['leadName','leadPhone','leadMsg','leadArea'].forEach(i=>document.getElementById(i).value='');
  document.getElementById('leadScrim').classList.add('on');
@@ -2430,7 +2504,7 @@ async function saveNewLead(){
  if(phone && !isValidEgyptPhone(phone)){ toastErr(t('invalidPhone')); return; }
  /* status/following_up default to the same values every other lead row already
     carries (mapLead() reads status as the hot/normal flag, following_up as 0/1) */
- const payload={ name, phone, source:src, message:msg, status:'normal', following_up:0, area };
+ const payload={ name, phone, source:src, message:msg, status:'normal', following_up:0, area, floor:currentFloor };
  const ok=await apiAction(t('leadAdded'), async ()=>{ const {error}=await sb.from('leads').insert(payload); if(error) throw new Error(error.message); }, loadLeads);
  if(ok) closeAddLead();
 }
@@ -2505,6 +2579,7 @@ function bkCard(b){
  </div>`;
 }
 function delBooking(id){
+ if(!requireNonCashierAction()) return;
  askConfirm(t('confirmDelBooking'), t('yesDelete'), async ()=>{
    await apiAction(t('bookingDeleted'), async ()=>{ const {error}=await sb.from('bookings').delete().eq('id',id); if(error) throw new Error(error.message); }, loadBookings);
  });
@@ -2559,6 +2634,7 @@ function updateBookingModalTitle(){
  document.getElementById('bkModalSub').textContent = bkEditId ? t('editBookingSub') : t('newBookingSub');
 }
 function openBooking(){
+ if(!requireNonCashierAction()) return;
  bkEditId=null;
  activeSvcLinesContainer='bkSvcLines';
  svcRows=[{id:'',d:'',p:'',staff:''}];
@@ -2581,6 +2657,7 @@ function openBooking(){
    a new booking always starts pending). Available to staff and owner alike --
    same access as delete/status changes, not owner-gated. */
 function openBookingEdit(id){
+ if(!requireNonCashierAction()) return;
  const b=bookings.find(x=>x.id===id);
  if(!b) return;
  bkEditId=id;
@@ -2660,7 +2737,7 @@ async function saveBooking(){
  const depositRaw=document.getElementById('bkDeposit').value.trim();
  const deposit=depositRaw===''?null:(parseInt(depositRaw)||0);
  const area=document.getElementById('bkArea').value.trim();
- const payload={ name, phone, source:src, booking_time:finalTime, booking_day:bookingDay, wants:JSON.stringify(svcs), deposit_amount:deposit, area };
+ const payload={ name, phone, source:src, booking_time:finalTime, booking_day:bookingDay, wants:JSON.stringify(svcs), deposit_amount:deposit, area, floor:currentFloor };
  let ok;
  if(bkEditId){
    /* setBk() (the direct "Showed up" button on the card) only ever fires this
@@ -2824,6 +2901,7 @@ function closeDrawer(){ document.getElementById('scrim').classList.remove('on');
    as the top "Check in" button / booking "showed up" path, just pre-filled
    from this client's profile. No forked logic. */
 function checkInFromDrawer(id){
+ if(!requireNonCashierAction()) return;
  const c=clientById(id);
  closeDrawer();
  openVisit({name:c.name, phone:c.phone, notes:c.notes==='—'?'':c.notes, area:c.area||''});
@@ -2832,6 +2910,7 @@ function checkInFromDrawer(id){
 /* ---- edit client ---- */
 let ecId=null;
 function openEC(id){
+ if(!requireNonCashierAction()) return;
  ecId=id; const c=clientById(id);
  document.getElementById('ecName').value=c.name;
  document.getElementById('ecPhone').value=c.phone;
@@ -2859,6 +2938,7 @@ async function saveEC(){
  if(ok){ closeEC(); closeDrawer(); }
 }
 function delClient(){
+ if(!requireNonCashierAction()) return;
  if(!ownerOnly()) return;
  askConfirm(t('confirmDelClient'), t('yesDeleteClient'), async ()=>{
    const ok=await apiAction(t('clientDeleted'), async ()=>{ const {error}=await sb.from('clients').delete().eq('id',ecId); if(error) throw new Error(error.message); }, loadClients);
@@ -2871,6 +2951,7 @@ function delClient(){
    pay_later_settled_at, which is the sole signal computeOversightStats() uses
    to move this visit's amount from "credited" to "collected". */
 async function markVisitPaid(cid,vi){
+ if(!requireNonCashierAction()) return;
  const c=clientById(cid);
  const v=c&&c.visits[vi];
  if(!v || v.payMethod!=='pay later' || v.payLaterSettledAt) return;
@@ -2886,6 +2967,7 @@ async function markVisitPaid(cid,vi){
  if(ok) openClient(cid);
 }
 function delVisit(cid,vi){
+ if(!requireNonCashierAction()) return;
  if(!ownerOnly()) return;
  const c=clientById(cid);
  if(c.visits.length<=1){ toast(t('staffBlocked')); return; }
@@ -2907,6 +2989,7 @@ function delVisit(cid,vi){
    after checkout. Same total-recompute logic as the checkout modal. ---- */
 let evpClientId=null, evpVisitIndex=null;
 function openEditVisitPrice(clientId,vi){
+ if(!requireNonCashierAction()) return;
  if(!ownerOnly()) return;
  evpClientId=clientId; evpVisitIndex=vi;
  const c=clientById(clientId), v=c.visits[vi];
@@ -2996,6 +3079,7 @@ function svcsToBookingRows(svcs){
  }) : [{id:'',d:'',p:'',staff:''}];
 }
 function openVisit(prefill){
+ if(!requireNonCashierAction()) return;
  editQueueId=null;
  activeSvcLinesContainer='svcLines';
  /* a booking's "Showed up" -> openVisit(prefill) can carry its already-picked
@@ -3283,7 +3367,7 @@ async function saveVisit(){
    const ok=await apiAction(t('saved'), async ()=>{
      const {error}=await sb.from('in_shop').update({
        name, phone:phone||null, phone_norm:phone?phoneNorm(phone):null,
-       services:svcs, notes:notes||null, birthday:bday||null, barber:firstLineBarber, area:area||null
+       services:svcs, notes:notes||null, birthday:bday||null, barber:firstLineBarber, area:area||null, floor:currentFloor
      }).eq('id',id);
      if(error) throw new Error(error.message);
    }, loadInShop);
@@ -3295,7 +3379,7 @@ async function saveVisit(){
    const {error}=await sb.from('in_shop').insert({
      name, phone:phoneRaw, phone_norm:phoneRaw?phoneNorm(phoneRaw):null,
      barber:firstLineBarber, state:'waiting', services:svcs,
-     notes:notes||null, birthday:bday||null, area:area||null,
+     notes:notes||null, birthday:bday||null, area:area||null, floor:currentFloor,
      source: mergeLead?mergeLead.src:'walkin',
      merge_lead_id: mergeLead?mergeLead.id:null,
      /* carried forward only when the booking match banner was actually
@@ -3315,6 +3399,12 @@ async function saveVisit(){
 
 /* ================= IN THE SHOP (live queue) ================= */
 function renderShop(){
+ const ci=document.getElementById('checkinBtn');
+ const cashierTablet=currentFloor==='cashier' && !isOwner();
+ if(ci) ci.style.display=cashierTablet?'none':'';
+ const searchBox=document.querySelector('.search');
+ if(searchBox) searchBox.style.display=cashierTablet?'none':'';
+ const floorTablet=(currentFloor==='floor1'||currentFloor==='floor2') && !isOwner();
  const el=document.getElementById('shopList');
  if(!inShop.length){ el.innerHTML=`<div class="empty">${t('nobodyIn')}</div>`; return; }
  const chair=inShop.filter(x=>x.state==='chair');
@@ -3344,18 +3434,22 @@ function renderShop(){
     </div>
     <div class="qacts">
         ${isChair
-          ? `<button class="btn btn-blue" onclick="openCheckout(${x.id})">
+          ? (floorTablet ? '' : `<button class="btn btn-blue" onclick="openCheckout(${x.id})">
                <svg viewBox="0 0 24 24" fill="none"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-               ${t('checkout')}</button>`
-          : `<button class="btn btn-blue" onclick="startCut(${x.id})">${t('startCut')}</button>`}
-        <button class="btn btn-ghost" onclick="openEditQueue(${x.id})">${t('edit')}</button>
-        <button class="btn btn-ghost" onclick="removeFromQueue(${x.id})" style="color:var(--red);border-color:var(--line)">${t('removeQueue')}</button>
+               ${t('checkout')}</button>`)
+          : (cashierTablet ? '' : `<button class="btn btn-blue" onclick="startCut(${x.id})">${t('startCut')}</button>`)}
+        ${cashierTablet ? '' : `<button class="btn btn-ghost" onclick="openEditQueue(${x.id})">${t('edit')}</button>
+        <button class="btn btn-ghost" onclick="removeFromQueue(${x.id})" style="color:var(--red);border-color:var(--line)">${t('removeQueue')}</button>`}
     </div>
   </div>`;
  }).join('');
 }
-async function startCut(id){ await apiAction(t('startedCut'), async ()=>{ const {error}=await sb.from('in_shop').update({state:'chair'}).eq('id',id); if(error) throw new Error(error.message); }, loadInShop); }
+async function startCut(id){
+ if(!requireNonCashierAction()) return;
+ await apiAction(t('startedCut'), async ()=>{ const {error}=await sb.from('in_shop').update({state:'chair'}).eq('id',id); if(error) throw new Error(error.message); }, loadInShop);
+}
 function removeFromQueue(id){
+ if(!requireNonCashierAction()) return;
  askConfirm(t('confirmRemoveQ'), t('yesRemove'), async ()=>{
    await apiAction(t('removedQueue'), async ()=>{ const {error}=await sb.from('in_shop').delete().eq('id',id); if(error) throw new Error(error.message); }, loadInShop);
  });
@@ -3366,6 +3460,7 @@ function removeFromQueue(id){
    back onto the same in_shop row (saveVisit()'s editQueueId branch). */
 let editQueueId=null;
 function openEditQueue(id){
+ if(!requireNonCashierAction()) return;
  const x=inShop.find(v=>v.id===id);
  if(!x) return;
  editQueueId=id; activeSvcLinesContainer='svcLines'; mergeLead=null; returningClient=null;
@@ -3404,6 +3499,7 @@ let coPayMethod='cash';
    Reset per-checkout in openCheckout() so it can't leak between clients. */
 let coDepositApplied=0;
 function openCheckout(id){
+ if(!requireCashierStation()) return;
  coId=id; coPayMethod='cash'; coDepositApplied=0; const x=inShop.find(i=>i.id===id);
  /* deposit info + optional "add to total" button -- only rendered when this
     in-shop entry actually has one on file (carried forward from an accepted
@@ -3574,7 +3670,7 @@ async function finishVisit(rating){
    const {data:visit,error:visitErr}=await sb.from('visits').insert({
      client_id:clientId, barber_id:barberId,
      rating, complaint:complaint||null, pay_method:coPayMethod,
-     price:totalPrice, discount, tip
+     price:totalPrice, discount, tip, floor:x.floor||null, checkout_floor:currentFloor
    }).select('id').single();
    if(visitErr) throw new Error(visitErr.message);
    const visitId=Number(visit.id);
@@ -3924,6 +4020,61 @@ async function downloadMonthlyReport(){
  }finally{
    btn.disabled=false;
  }
+}
+
+/* ================= STATION REPORTS (per-floor monthly PDF, same technique as the monthly report) ================= */
+function buildStationReportData(stationKey){
+ const cal=calendarDateParts();
+ const now=cal?new Date(cal.y,cal.m-1,cal.d):new Date();
+ const monthStartMs=new Date(now.getFullYear(),now.getMonth(),1).getTime();
+ const monthEndMs=new Date(now.getFullYear(),now.getMonth()+1,1).getTime();
+ let checkins=0, checkouts=0, ratingSum=0, ratingCount=0;
+ const servedClientIds=new Set();
+ clients.forEach(c=>c.visits.forEach(v=>{
+   const inMonth=v.ts>=monthStartMs && v.ts<monthEndMs;
+   if(!inMonth) return;
+   if(v.floor===stationKey){ checkins++; servedClientIds.add(c.id); }
+   if(v.checkoutFloor===stationKey){ checkouts++; if(v.rating!=null){ ratingSum+=v.rating; ratingCount++; } }
+ }));
+ const bookingsMade=bookings.filter(b=>b.floor===stationKey && b.createdAt>=monthStartMs && b.createdAt<monthEndMs).length;
+ const leadsCaptured=leads.filter(l=>l.floor===stationKey && l.ts>=monthStartMs && l.ts<monthEndMs).length;
+ const months=lang==='en'?MONTHS_EN:MONTHS_AR;
+ return { stationLabel:floorLabel(stationKey), monthLabel:`${months[now.getMonth()]} ${now.getFullYear()}`,
+   checkins, checkouts, avgRating: ratingCount>0?Math.round((ratingSum/ratingCount)*100)/100:null, ratingCount,
+   bookingsMade, leadsCaptured, clientsServed:servedClientIds.size, generatedOn:fmtDate(Date.now()) };
+}
+function buildStationReportHtml(data){
+ const rowsHtml=(rows)=>rows.map(r=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #eee;font-size:14px"><span>${r.label}</span><span style="font-weight:700">${r.value}</span></div>`).join('');
+ return `<div style="font-size:22px;font-weight:800;margin-bottom:6px">${t('stationReportTitle').replace('{station}',data.stationLabel)}</div>
+   <div style="font-size:13px;color:#888;margin-bottom:22px">${data.monthLabel} &nbsp;·&nbsp; ${t('reportGeneratedOn')}: ${data.generatedOn}</div>
+   ${rowsHtml([
+     {label:t('reportCheckins'), value:data.checkins},
+     {label:t('reportCheckouts'), value:data.checkouts},
+     {label:t('reportRatingsCollected'), value:data.avgRating!=null?`${data.avgRating.toFixed(1)} / 5 (${data.ratingCount})`:t('reportNoData')},
+     {label:t('reportBookingsMade'), value:data.bookingsMade},
+     {label:t('reportLeadsCaptured'), value:data.leadsCaptured},
+     {label:t('reportClientsServed'), value:data.clientsServed}
+   ])}`;
+}
+async function downloadStationReport(stationKey){
+ try{
+   const data=buildStationReportData(stationKey);
+   const isRtl=lang==='ar';
+   const container=document.createElement('div');
+   container.style.cssText=`position:fixed;top:-99999px;left:-99999px;width:700px;background:#fff;padding:36px;direction:${isRtl?'rtl':'ltr'};text-align:${isRtl?'right':'left'};font-family:'Inter',Almarai,'IBM Plex Sans Arabic',sans-serif;color:#111;`;
+   container.innerHTML=buildStationReportHtml(data);
+   document.body.appendChild(container);
+   const canvas=await html2canvas(container,{scale:2,backgroundColor:'#ffffff'});
+   const { jsPDF }=window.jspdf;
+   const doc=new jsPDF({unit:'pt',format:'a4'});
+   const pageW=doc.internal.pageSize.getWidth();
+   const mx=36, my=36, imgW=pageW-mx*2, imgH=canvas.height*imgW/canvas.width;
+   doc.addImage(canvas.toDataURL('image/png'),'PNG',mx,my,imgW,imgH);
+   document.body.removeChild(container);
+   const cal=calendarDateParts(); const d=cal?new Date(cal.y,cal.m-1,cal.d):new Date();
+   doc.save(`Sayed-Ali-${stationKey}-Report-${MONTHS_EN[d.getMonth()]}-${d.getFullYear()}.pdf`);
+   toast(t('reportReady'));
+ }catch(e){ toastErr(e.message||String(e)); }
 }
 
 let ovStats=null;
@@ -4362,6 +4513,7 @@ function setLang(l){
  document.querySelectorAll('[data-i-ph]').forEach(el=>el.setAttribute('placeholder',t(el.getAttribute('data-i-ph'))));
  updateVisitModalTitle();
  updateBookingModalTitle();
+ renderFloorTag();
  renderNav(); renderMNav(); renderLeadSeg(); renderBookSeg(); fillClientFilters(); renderAll();
 }
 
@@ -4563,6 +4715,7 @@ async function boot(){
     return;
   }
   document.getElementById('boot').style.display='none';
+  loadDeviceFloor(); renderFloorTag(); if(!currentFloor) openFloorPicker();
   go(view);
 }
 boot();
