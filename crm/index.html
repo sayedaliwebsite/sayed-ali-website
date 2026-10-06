@@ -4270,9 +4270,9 @@ function playBirthdaySound(){
 }
 function renderNotifs(){
  const fl=clients.filter(needsFollow);
- const bd=clients.filter(bdayNotifSoon);
- const newBdays=bd.filter(c=>!birthdaySoundedIds.has(c.id));
- if(newBdays.length){ newBdays.forEach(c=>birthdaySoundedIds.add(c.id)); playBirthdaySound(); }
+ const bd=clients.filter(bdaySoon);
+ const soundDue=clients.filter(bdayNotifSoon).filter(c=>!birthdaySoundedIds.has(c.id));
+ if(soundDue.length){ soundDue.forEach(c=>birthdaySoundedIds.add(c.id)); playBirthdaySound(); }
  const items=[
   ...bd.map(c=>{const d=daysToBday(c.bday);return {ic:'bday',t:`<b>${c.name}</b> — ${d===0?t('bdayToday'):`${t('bdayIn')} ${d} ${t('bdayDays')}`}`,tm:c.bday,id:c.id};}),
   ...fl.map(c=>({ic:'follow',t:`<b>${c.name}</b> ${t('notifTitle')}`,tm:fmtDate(lastTs(c)),id:c.id})),
