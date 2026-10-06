@@ -958,6 +958,7 @@
         <div class="fg"><label data-i="fPhone">Phone</label><input id="vPhone" dir="ltr" placeholder="01— —— ————" oninput="onPhoneInput()" /></div>
         <div class="fg"><label data-i="fName">Name</label><input id="vName" data-i-ph="phName" placeholder="Client name" /></div>
       </div>
+      <div class="fg"><label data-i="fArea">Area</label><input id="vArea" /></div>
       <label style="display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin-bottom:8px" data-i="fServicesCI">Services he's taking today</label>
       <div id="svcLines"></div>
       <button class="addsvc" onclick="addSvcLine()">
@@ -972,7 +973,6 @@
         </div>
       </div>
       <div class="fg"><label data-i="fNotes">Preferences / notes</label><textarea id="vNotes" data-i-ph="phNotes" placeholder="Usual style, preferred barber, allergies…"></textarea></div>
-      <div class="fg"><label data-i="fArea">Area</label><input id="vArea" /></div>
     </div>
     <div class="mf">
       <button class="btn btn-ghost" onclick="cancelVisit()" data-i="cancel">Cancel</button>
@@ -990,6 +990,7 @@
         <div class="fg"><label data-i="fName">Name</label><input id="bkName" data-i-ph="phName" placeholder="Client name" /></div>
         <div class="fg"><label data-i="fPhone">Phone</label><input id="bkPhone" dir="ltr" placeholder="01— —— ————" /></div>
       </div>
+      <div class="fg"><label data-i="fArea">Area</label><input id="bkArea" /></div>
       <div class="frow">
         <div class="fg"><label data-i="fWhen">Day</label><select id="bkDay" onchange="onBkDayChange()"></select></div>
         <div class="fg"><label data-i="fTime">Time</label><input type="time" id="bkTime" onchange="guardClosedHourInput(this)" /></div>
@@ -1008,7 +1009,6 @@
         <span data-i="addService">Add another service</span>
       </button>
       <div class="fg" style="margin-top:16px"><label data-i="fDeposit">Deposit paid in advance</label><input type="number" id="bkDeposit" placeholder="0" min="0" oninput="blockNegativeInput(this)" onkeydown="blockMinusKey(event)" /></div>
-      <div class="fg" style="margin-top:16px"><label data-i="fArea">Area</label><input id="bkArea" /></div>
       <div class="fg" style="margin-top:16px"><label data-i="fSource">Booked via</label><select id="bkSrc"></select></div>
       <div class="fg" id="bkStatusRow" style="display:none"><label data-i="fStatus">Status</label><select id="bkStatus"></select></div>
     </div>
@@ -1028,8 +1028,8 @@
         <div class="fg"><label data-i="fName">Name</label><input id="leadName" data-i-ph="phName" placeholder="Client name" /></div>
         <div class="fg"><label data-i="fPhone">Phone</label><input id="leadPhone" dir="ltr" placeholder="01— —— ————" /></div>
       </div>
-      <div class="fg"><label data-i="fSource">Source</label><select id="leadSrc"></select></div>
       <div class="fg"><label data-i="fArea">Area</label><input id="leadArea" /></div>
+      <div class="fg"><label data-i="fSource">Source</label><select id="leadSrc"></select></div>
       <div class="fg"><label data-i="fMessage">Message / note</label><textarea id="leadMsg"></textarea></div>
     </div>
     <div class="mf">
@@ -1048,9 +1048,9 @@
         <div class="fg"><label data-i="fName">Name</label><input id="ecName" /></div>
         <div class="fg"><label data-i="fPhone">Phone</label><input id="ecPhone" dir="ltr" /></div>
       </div>
+      <div class="fg"><label data-i="fArea">Area</label><input id="ecArea" /></div>
       <div class="fg"><label data-i="fBirthday">Birthday (optional)</label><input id="ecBday" placeholder="DD/MM" /></div>
       <div class="fg"><label data-i="fNotes">Preferences / notes</label><textarea id="ecNotes"></textarea></div>
-      <div class="fg"><label data-i="fArea">Area</label><input id="ecArea" /></div>
       <div class="fg" style="display:flex;align-items:center;gap:9px">
         <input type="checkbox" id="ecVip" style="width:auto" />
         <label for="ecVip" style="margin:0;cursor:pointer" data-i="fVip">VIP client</label>
