@@ -1584,10 +1584,10 @@ function requireCashierStation(){ if(currentFloor!=='cashier' && !isOwner()){ to
 function openFloorPicker(){
   document.getElementById('floorPickerTitle').textContent=t('chooseFloorTitle');
   document.getElementById('floorPickerSub').textContent=t('chooseFloorSub');
-  document.getElementById('floorPickerBtns').innerHTML=FLOORS.map(f=>`<button class="btn btn-blue" style="justify-content:center;padding:16px" onclick="setDeviceFloor('${f.k}')">${t(f.l)}</button>`).join('');
+  document.getElementById('floorPickerBtns').innerHTML=FLOORS.map(f=>`<button class="btn btn-blue" style="justify-content:center;padding:16px${f.k===currentFloor?';outline:3px solid var(--ink);outline-offset:2px':''}" onclick="setDeviceFloor('${f.k}')">${t(f.l)}</button>`).join('');
   document.getElementById('floorPickerScrim').classList.add('on');
 }
-function closeFloorPicker(){ document.getElementById('floorPickerScrim').classList.remove('on'); }
+function closeFloorPicker(){ if(!currentFloor){ openFloorPicker(); return; } document.getElementById('floorPickerScrim').classList.remove('on'); }
 
 /* ================= meta ================= */
 const SRC={
@@ -4759,7 +4759,7 @@ function isNetworkError(err){
   return (nested && nested !== err) ? isNetworkError(nested) : false;
 }
 async function boot(){
-  setLang(lang);
+  setLang(lang); loadDeviceFloor(); openFloorPicker();
   document.documentElement.setAttribute('data-theme','light');
   try{
     const { data:{ session: sbSession } } = await sb.auth.getSession();
