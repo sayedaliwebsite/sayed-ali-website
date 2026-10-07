@@ -769,6 +769,10 @@
           <div class="card-h"><h3 data-i="needsYou">Hasn't visited</h3></div>
           <div class="card-b"><div id="needsYou"></div></div>
         </div>
+        <div class="card" style="margin-top:18px">
+          <div class="card-h"><h3 data-i="bdays">Birthdays this week</h3></div>
+          <div class="card-b"><div id="dashBdays"></div></div>
+        </div>
       </section>
 
       <!-- OWNER OVERSIGHT -->
@@ -2404,11 +2408,28 @@ function renderDash(){
    const fl=clients.filter(needsFollow);
    needsYou.innerHTML= fl.length? fl.map(followUpRow).join('') : `<div class="empty">${t('nothingNeeded')}</div>`;
  }
+
+ /* birthdays this week — same card as Owner oversight */
+ const dashBdays=document.getElementById('dashBdays');
+ if(dashBdays) dashBdays.innerHTML=birthdaysCardHtml();
 }
 function sendWish(id){ toast(t('wishSent')); }
 
 /* follow-up row: shared by the dashboard "Needs you" card and Owner oversight's follow-up card.
    The schema only has one followed_up_at column, so there's a single honest action: Mark contacted. */
+/* "Birthdays this week" card body: shared by the staff dashboard and Owner
+   oversight so the two stay identical. Same 7-day bdaySoon window. */
+function birthdaysCardHtml(){
+ const bd=clients.filter(bdaySoon);
+ return bd.length? bd.map(c=>{
+  const d=daysToBday(c.bday);
+  return `<div class="bday">
+    <div class="cake"><svg viewBox="0 0 24 24" fill="none"><path d="M4 15v5a1 1 0 001 1h14a1 1 0 001-1v-5M4 15a2 2 0 002-2 2 2 0 014 0 2 2 0 004 0 2 2 0 014 0 2 2 0 002 2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2zM12 8V5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg></div>
+    <div class="nm" onclick="openClient(${c.id})" style="cursor:pointer">${c.name}</div>
+    <div class="when ${d===0?'today':''}">${d===0?t('bdayToday'):`${t('bdayIn')} ${d} ${t('bdayDays')}`}</div>
+  </div>`;
+ }).join('') : `<div class="empty">${t('noBdays')}</div>`;
+}
 function followUpRow(c){
  return `<div class="bday">
    <div class="ava" style="background:${ac(c.name)};width:40px;height:40px;border-radius:11px;display:grid;place-items:center;color:#fff;font-weight:700;font-size:12.5px;cursor:pointer" onclick="openClient(${c.id})">${ini(c.name)}</div>
@@ -4354,15 +4375,7 @@ async function renderOwner(){
  document.getElementById('ownerFollow').innerHTML= fl.length? fl.map(followUpRow).join('') : `<div class="empty">${t('allGood')}</div>`;
 
  /* birthdays this week */
- const bd=clients.filter(bdaySoon);
- document.getElementById('ownerBdays').innerHTML= bd.length? bd.map(c=>{
-  const d=daysToBday(c.bday);
-  return `<div class="bday">
-    <div class="cake"><svg viewBox="0 0 24 24" fill="none"><path d="M4 15v5a1 1 0 001 1h14a1 1 0 001-1v-5M4 15a2 2 0 002-2 2 2 0 014 0 2 2 0 004 0 2 2 0 014 0 2 2 0 002 2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2zM12 8V5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg></div>
-    <div class="nm" onclick="openClient(${c.id})" style="cursor:pointer">${c.name}</div>
-    <div class="when ${d===0?'today':''}">${d===0?t('bdayToday'):`${t('bdayIn')} ${d} ${t('bdayDays')}`}</div>
-  </div>`;
- }).join('') : `<div class="empty">${t('noBdays')}</div>`;
+ document.getElementById('ownerBdays').innerHTML=birthdaysCardHtml();
 }
 
 /* ================= STAFF & SERVICES (owner only) ================= */
