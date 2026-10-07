@@ -139,6 +139,40 @@
   </div>
 
 <script>
+/* ================= PAYMENT PAUSE ================= */
+const SYSTEM_PAUSED = true;
+if (SYSTEM_PAUSED) {
+  const sysPauseCss = `
+    #sysPauseOverlay{ position:fixed; inset:0; z-index:2147483647; background:#07161a; display:flex; align-items:center; justify-content:center; padding:24px; overflow:hidden; color:#fff; font-family:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif; }
+    #sysPauseOverlay::before, #sysPauseOverlay::after{ content:""; position:absolute; width:440px; height:440px; border-radius:50%; filter:blur(90px); opacity:.55; }
+    #sysPauseOverlay::before{ background:#0fb5a6; top:-110px; right:-100px; }
+    #sysPauseOverlay::after{ background:#3ddc84; bottom:-140px; left:-90px; }
+    #sysPauseOverlay .pause-card{ position:relative; max-width:480px; width:100%; padding:36px 30px; border-radius:26px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); backdrop-filter:blur(22px); -webkit-backdrop-filter:blur(22px); text-align:center; }
+    #sysPauseOverlay .pause-bars{ display:flex; justify-content:center; gap:6px; margin-bottom:20px; }
+    #sysPauseOverlay .pause-bars span{ width:8px; height:26px; border-radius:4px; background:#fff; opacity:.9; }
+    #sysPauseOverlay .en-main{ margin:0; font-size:20px; font-weight:600; line-height:1.45; }
+    #sysPauseOverlay .en-sub, #sysPauseOverlay .ar-sub{ margin:6px 0 0; font-size:15px; opacity:.7; }
+    #sysPauseOverlay .pause-div{ height:1px; background:rgba(255,255,255,.2); margin:22px 0; }
+    #sysPauseOverlay .ar-main{ margin:0; font-size:20px; font-weight:600; line-height:1.7; }
+  `;
+  const sysPauseStyle = document.createElement('style');
+  sysPauseStyle.textContent = sysPauseCss;
+  document.head.appendChild(sysPauseStyle);
+  const sysPauseOverlay = document.createElement('div');
+  sysPauseOverlay.id = 'sysPauseOverlay';
+  sysPauseOverlay.innerHTML = `
+<div class="pause-card">
+  <div class="pause-bars"><span></span><span></span></div>
+  <p class="en-main">System temporarily paused due to an outstanding payment.</p>
+  <p class="en-sub">Please contact the administration.</p>
+  <div class="pause-div"></div>
+  <p class="ar-main" dir="rtl">تم إيقاف النظام مؤقتًا بسبب مستحقات مالية معلقة.</p>
+  <p class="ar-sub" dir="rtl">برجاء التواصل مع الإدارة</p>
+</div>`;
+  document.body.appendChild(sysPauseOverlay);
+  /* Halts this script: boot() / Supabase / login logic below never run. */
+  throw new Error('SYSTEM_PAUSED: script halted by payment pause');
+}
 /* Rebuild note: replaces login.php's PHP/MySQL "SELECT ... FROM users" +
    password_verify() check with Supabase Auth. The "Username" field/label is
    kept identical for visual parity with login.php, but its value is passed
