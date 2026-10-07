@@ -1382,8 +1382,8 @@ const I18N={
   reportNoData:"No data", reportCuts:"cuts", reportGeneratedOn:"Generated on",
   reportOverview:"This Month", reportTotalOwed:"Total owed",
   floor1Label:"1st Floor", floor2Label:"2nd Floor", cashierLabel:"Cashier",
-  chooseFloorTitle:"Which station is this tablet?",
-  chooseFloorSub:"Pick your spot. Tap it anytime to change.",
+  chooseFloorTitle:"Which tablet?",
+  chooseFloorSub:"",
   floorTag:"Station", noFloorTag:"Not assigned",
   cashierOnlyCheckout:"This tablet is set to Cashier — it can only check clients out.",
   notCashierStation:"Only the Cashier station can check clients out.",
@@ -1544,8 +1544,8 @@ const I18N={
   reportNoData:"لا توجد بيانات", reportCuts:"قصة", reportGeneratedOn:"تاريخ الإنشاء",
   reportOverview:"نظرة عامة", reportTotalOwed:"الإجمالي",
   floor1Label:"الدور الأول", floor2Label:"الدور الثاني", cashierLabel:"الكاشير",
-  chooseFloorTitle:"المحطة دي بتاعة تابلت مين؟",
-  chooseFloorSub:"اختار مكانك. تقدر تغيرها بعدين بالضغط على المكان.",
+  chooseFloorTitle:"تابلت مين؟",
+  chooseFloorSub:"",
   floorTag:"المحطة", noFloorTag:"غير محددة",
   cashierOnlyCheckout:"التابلت ده متحدد كـ كاشير — بس يقدر يقفل الحسابات. مفيش حاجة تانية.",
   notCashierStation:"قفل الحساب (الخروج) بس بتاع محطة الكاشير.",
@@ -1583,7 +1583,7 @@ function requireNonCashierAction(){ if(currentFloor==='cashier' && !isOwner()){ 
 function requireCashierStation(){ if(currentFloor!=='cashier' && !isOwner()){ toastErr(t('notCashierStation')); return false; } return true; }
 function openFloorPicker(){
   document.getElementById('floorPickerTitle').textContent=t('chooseFloorTitle');
-  document.getElementById('floorPickerSub').textContent=t('chooseFloorSub');
+  const sub=t('chooseFloorSub'); const subEl=document.getElementById('floorPickerSub'); subEl.textContent=sub; subEl.style.display=sub?'':'none';
   document.getElementById('floorPickerBtns').innerHTML=FLOORS.map(f=>`<button class="btn btn-blue" style="justify-content:center;padding:16px${f.k===currentFloor?';outline:3px solid var(--ink);outline-offset:2px':''}" onclick="setDeviceFloor('${f.k}')">${t(f.l)}</button>`).join('');
   document.getElementById('floorPickerScrim').classList.add('on');
 }
