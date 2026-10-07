@@ -628,6 +628,16 @@
   .frow{ display:grid; grid-template-columns:1fr 1fr; gap:13px; }
   .svc-line{ display:grid; grid-template-columns:1.1fr 1.2fr .7fr 34px; gap:9px; align-items:center; margin-bottom:9px; }
   .svc-line input,.svc-line select{ padding:10px 11px; font-size:13px; }
+  /* stacked service row: service / barber / details each on its own full-width
+     line, remove button beside them; divider between consecutive rows */
+  .svc-line.svc-stack{ grid-template-columns:minmax(0,1fr) 34px !important; align-items:start; }
+  .svc-fields{ display:flex; flex-direction:column; gap:8px; min-width:0; }
+  .svc-fields > select, .svc-fields > input{ width:100%; min-width:0; max-width:100%; }
+  #svcLines .svc-line + .svc-line, #bkSvcLines .svc-line + .svc-line{ border-top:1px solid var(--line-soft); padding-top:12px; margin-top:4px; }
+  /* no horizontal scrollbar in the check-in / edit-visit / booking modals:
+     clip sideways overflow, let grid/flex children shrink below their content */
+  #mscrim .modal, #mscrim .mb, #bkScrim .modal, #bkScrim .mb{ overflow-x:hidden; }
+  #mscrim .frow > *, #mscrim .fg, #mscrim .svc-line > *, #bkScrim .frow > *, #bkScrim .fg, #bkScrim .svc-line > *{ min-width:0; }
   .rm{ width:34px; height:38px; border-radius:9px; border:1px solid var(--line); display:grid; place-items:center; color:var(--ink-faint); }
   .rm:hover{ border-color:var(--red); color:var(--red); }
   .rm svg{ width:15px; height:15px; }
@@ -1283,6 +1293,7 @@ const I18N={
   thClient:"Client", thLast:"Last visit", thDid:"What they did", thBarber:"Barber", thVisits:"Visits", thSpent:"Total spent",
   logVisit:"Log a visit", logVisitSub:"Reception desk — the client is here now.",
   fPhone:"Phone", fName:"Name", phName:"Client name", fBarber:"Barber", fServices:"Services done today", fArea:"Area",
+  catCut:"Hair", catSkin:"Skin", catSpa:"Spa", catOther:"Other",
   addService:"Add another service", fNotes:"Preferences / notes", phNotes:"Usual style, preferred barber, allergies…",
   totalPaid:"Total paid", cancel:"Cancel", saveVisit:"Save visit",
   navShop:"In the shop",
@@ -1445,6 +1456,7 @@ const I18N={
   thClient:"العميل", thLast:"آخر زيارة", thDid:"اللي عمله", thBarber:"الحلاق", thVisits:"الزيارات", thSpent:"إجمالي المدفوع",
   logVisit:"تسجيل زيارة", logVisitSub:"الاستقبال — العميل موجود في الصالون دلوقتي.",
   fPhone:"الهاتف", fName:"الاسم", phName:"اسم العميل", fBarber:"الحلاق", fServices:"الخدمات اللي اتعملت النهاردة", fArea:"المنطقة",
+  catCut:"القص", catSkin:"البشرة", catSpa:"سبا", catOther:"أخرى",
   addService:"إضافة خدمة أخرى", fNotes:"ملاحظات", phNotes:"القصة المعتادة، الحلاق المفضل، حساسية…",
   totalPaid:"إجمالي المدفوع", cancel:"إلغاء", saveVisit:"حفظ الزيارة",
   navShop:"في الصالون",
@@ -2004,7 +2016,7 @@ function mapStaff(row){
     services:(row.services||[]).map(s=>({id:Number(s.id), name_ar:s.name_ar, name_en:s.name_en})) };
 }
 function mapService(row){
-  return { id:Number(row.id), name_ar:row.name_ar, name_en:row.name_en, active:!!Number(row.active) };
+  return { id:Number(row.id), name_ar:row.name_ar, name_en:row.name_en, active:!!Number(row.active), category:row.category || '' };
 }
 /* weekday codes match JS Date#getDay() order (0=Sun..6=Sat) so "today's" off-day
    check is a straight array lookup */
@@ -2057,7 +2069,7 @@ async function loadStaff(){
 }
 async function loadServices(){
   try{
-    const { data, error } = await sb.from('services').select('id,name_ar,name_en,active').order('name_en', {ascending:true});
+    const { data, error } = await sb.from('services').select('id,name_ar,name_en,active,category').order('name_en', {ascending:true});
     if(error) throw error;
     services=data.map(mapService);
   }
@@ -3180,8 +3192,24 @@ function closeVisit(){
 window.addEventListener('beforeunload', e=>{
  if(document.getElementById('mscrim').classList.contains('on') && isVisitDirty()){ e.preventDefault(); e.returnValue=''; }
 });
-function renderSvcLines(){
+/* Shared service <select> options: leading "—" (plus any extra leading options,
+   e.g. the booking form's "Already noted"), then active services grouped by
+   services.category in cut / skin / spa order, uncategorized last under
+   "Other". Services keep their loaded order inside each group; empty groups
+   are skipped. disabledIds = services already used on another line. */
+const SVC_CATEGORY_ORDER=['cut','skin','spa'];
+function serviceOptionsHtml(selectedId, disabledIds=[], extraOptionsHtml=''){
  const list=services.filter(s=>s.active);
+ const groups=[
+   ...SVC_CATEGORY_ORDER.map(c=>({key:c, items:list.filter(s=>s.category===c)})),
+   {key:'other', items:list.filter(s=>!SVC_CATEGORY_ORDER.includes(s.category))}
+ ];
+ const label={cut:'catCut', skin:'catSkin', spa:'catSpa', other:'catOther'};
+ return `<option value="">—</option>${extraOptionsHtml}`+groups.filter(g=>g.items.length).map(g=>
+   `<optgroup label="${t(label[g.key])}">${g.items.map(s=>`<option value="${s.id}" ${selectedId===s.id?'selected':''} ${disabledIds.includes(s.id)&&selectedId!==s.id?'disabled':''}>${lang==='en'?s.name_en:s.name_ar}</option>`).join('')}</optgroup>`
+ ).join('');
+}
+function renderSvcLines(){
  const chosen=svcRows.map(r=>r.id).filter(Boolean);
  /* "Already noted" is only offered on the booking form -- check-in
     (#svcLines) always needs a real, priced service since it drives revenue */
@@ -3197,17 +3225,17 @@ function renderSvcLines(){
   }
   const avail=eligibleStaffForLine(r.id);
   return `
-  <div class="svc-line" style="grid-template-columns:1fr 1fr 1.3fr 34px">
-    <select onchange="setSvcRow(${i},this.value)">
-      <option value="">—</option>
-      ${isBooking?`<option value="${SVC_NOTED}">${t('alreadyNotedLabel')}</option>`:''}
-      ${list.map(s=>`<option value="${s.id}" ${r.id===s.id?'selected':''} ${chosen.includes(s.id)&&r.id!==s.id?'disabled':''}>${lang==='en'?s.name_en:s.name_ar}</option>`).join('')}
-    </select>
-    <select onchange="svcRows[${i}].staff=this.value">
-      <option value="">—</option>
-      ${avail.map(s=>`<option value="${s.name}" ${r.staff===s.name?'selected':''}>${s.name}</option>`).join('')}
-    </select>
-    <input placeholder="${lang==='en'?'Detail (e.g. low taper fade)':'التفاصيل (مثلاً: تيبر فيد)'}" value="${r.d}" oninput="svcRows[${i}].d=this.value" />
+  <div class="svc-line svc-stack">
+    <div class="svc-fields">
+      <select onchange="setSvcRow(${i},this.value)">
+        ${serviceOptionsHtml(r.id, chosen, isBooking?`<option value="${SVC_NOTED}">${t('alreadyNotedLabel')}</option>`:'')}
+      </select>
+      <select onchange="svcRows[${i}].staff=this.value">
+        <option value="">—</option>
+        ${avail.map(s=>`<option value="${s.name}" ${r.staff===s.name?'selected':''}>${s.name}</option>`).join('')}
+      </select>
+      <input placeholder="${lang==='en'?'Detail (e.g. low taper fade)':'التفاصيل (مثلاً: تيبر فيد)'}" value="${r.d}" oninput="svcRows[${i}].d=this.value" />
+    </div>
     ${rmBtn(i)}
   </div>`;
  }).join('');
