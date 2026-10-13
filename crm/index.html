@@ -882,6 +882,13 @@
 
       <!-- IN THE SHOP -->
       <section id="v-shop" class="view">
+        <div class="shop-search-bar" style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <div class="fg" style="flex:1;margin:0;position:relative">
+            <input id="shopSearch" type="text" autocomplete="off" data-i-ph="shopSearchPh" placeholder="Type a name&hellip;" oninput="onShopSearchInput()" style="padding-inline-end:30px">
+            <button type="button" id="shopSearchClear" onclick="clearShopSearch()" aria-label="clear" style="display:none;position:absolute;inset-inline-end:8px;top:50%;transform:translateY(-50%);color:var(--ink-faint);font-size:14px;line-height:1;padding:4px">&#10005;</button>
+          </div>
+          <span id="shopSearchCount" style="color:var(--ink-faint);font-size:12.5px;white-space:nowrap"></span>
+        </div>
         <div id="shopList"></div>
       </section>
 
@@ -1361,6 +1368,7 @@ const I18N={
   checkoutTitle:"Checkout", checkoutSub:"Enter what he paid, then close the visit.",
   closeVisit:"Close visit & save", nobodyIn:"Nobody in the shop right now.",
   since:"since", noPriceYet:"Price at checkout",
+  shopSearchPh:"Type a name…", shopNoMatch:"No match",
   fServicesCI:"Services he's taking today",
   kLeads:"Unhandled leads", kToday:"Today's bookings", kClients:"Total clients", kFollow:"Need follow-up",
   src_whatsapp:"WhatsApp", src_website:"Website booking", src_call:"Phone call", src_walkin:"Walk-in",
@@ -1524,6 +1532,7 @@ const I18N={
   checkoutTitle:"الحساب", checkoutSub:"اكتب اللي دفعه، وبعدين اقفل الزيارة.",
   closeVisit:"اقفل الزيارة واحفظ", nobodyIn:"مفيش حد في الصالون دلوقتي.",
   since:"من", noPriceYet:"السعر عند الخروج",
+  shopSearchPh:"اكتب الاسم…", shopNoMatch:"مفيش نتيجة",
   fServicesCI:"الخدمات اللي هياخدها النهاردة",
   kLeads:"عملاء محتملين جدد", kToday:"حجوزات اليوم", kClients:"إجمالي العملاء", kFollow:"يحتاج متابعة",
   src_whatsapp:"واتساب", src_website:"حجز من الموقع", src_call:"مكالمة", src_walkin:"حضور مباشر",
@@ -3500,6 +3509,73 @@ async function saveVisit(){
 
 
 /* ================= IN THE SHOP (live queue) ================= */
+let shopSearchQ='';
+/* Arabic-aware normalization for the shop search box: strips tashkeel
+   (combining marks have no width, so dropping them doesn't shift the
+   visible text), folds alef/ya/ta-marbuta variants together, and
+   lowercases. Shared by the query and every candidate word so "a" ==
+   "A" and "احمد"/"أحمد" are the same name. */
+function shopNormalizeChar(c){
+ if(/[ً-ٰٟۖ-ۭ]/.test(c)) return '';
+ if(c==='أ'||c==='إ'||c==='آ') return 'ا';
+ if(c==='ى') return 'ي';
+ if(c==='ة') return 'ه';
+ return c.toLowerCase();
+}
+function shopNormalizeStr(s){
+ let out=''; for(const c of String(s||'')) out+=shopNormalizeChar(c);
+ return out;
+}
+function shopTokenize(name){
+ const re=/\S+/g, toks=[]; let m;
+ while((m=re.exec(name||''))) toks.push({word:m[0], start:m.index});
+ return toks;
+}
+/* Per-word normalized form plus a map back to original character offsets,
+   so a match found in normalized space (where tashkeel is gone) can still
+   be bolded against the original, un-normalized name string. */
+function shopBuildNormMap(word){
+ let norm='', map=[];
+ for(let i=0;i<word.length;i++){
+   const nc=shopNormalizeChar(word[i]);
+   if(nc){ norm+=nc; map.push(i); }
+ }
+ return {norm,map};
+}
+/* qNorm must already be normalized. Matches if qNorm is a prefix of the
+   whole name OR of any individual word in it (first name or surname). */
+function shopNameMatchInfo(name,qNorm){
+ if(!qNorm) return {match:true};
+ const toks=shopTokenize(name);
+ for(const tok of toks){
+   const {norm,map}=shopBuildNormMap(tok.word);
+   if(norm.startsWith(qNorm)){
+     const end=tok.start+(qNorm.length?map[qNorm.length-1]+1:0);
+     return {match:true, boldStart:tok.start, boldEnd:end};
+   }
+ }
+ return {match:false};
+}
+function shopHighlight(name,qNorm){
+ const info=shopNameMatchInfo(name,qNorm);
+ if(!info.match || info.boldStart===undefined) return name;
+ return name.slice(0,info.boldStart)+'<b>'+name.slice(info.boldStart,info.boldEnd)+'</b>'+name.slice(info.boldEnd);
+}
+function onShopSearchInput(){
+ shopSearchQ=document.getElementById('shopSearch').value;
+ const clearBtn=document.getElementById('shopSearchClear');
+ if(clearBtn) clearBtn.style.display=shopSearchQ?'':'none';
+ renderShop();
+}
+function clearShopSearch(){
+ shopSearchQ='';
+ const inp=document.getElementById('shopSearch');
+ if(inp) inp.value='';
+ const clearBtn=document.getElementById('shopSearchClear');
+ if(clearBtn) clearBtn.style.display='none';
+ renderShop();
+ if(inp) inp.focus();
+}
 function renderShop(){
  const ci=document.getElementById('checkinBtn');
  const cashierTablet=currentFloor==='cashier' && !isOwner();
@@ -3508,20 +3584,26 @@ function renderShop(){
  if(searchBox) searchBox.style.display=cashierTablet?'none':'';
  const floorTablet=(currentFloor==='floor1'||currentFloor==='floor2') && !isOwner();
  const el=document.getElementById('shopList');
- if(!inShop.length){ el.innerHTML=`<div class="empty">${t('nobodyIn')}</div>`; return; }
+ const countEl=document.getElementById('shopSearchCount');
+ if(!inShop.length){ el.innerHTML=`<div class="empty">${t('nobodyIn')}</div>`; if(countEl) countEl.textContent=''; return; }
  const chair=inShop.filter(x=>x.state==='chair');
  const wait=inShop.filter(x=>x.state==='waiting');
  const ordered=[...chair,...wait];
- el.innerHTML=ordered.map((x)=>{
+ const qNorm=shopNormalizeStr((shopSearchQ||'').trim());
+ const filtered=qNorm ? ordered.filter(x=>shopNameMatchInfo(x.name,qNorm).match) : ordered;
+ if(countEl) countEl.textContent=qNorm ? `${filtered.length} / ${inShop.length}` : '';
+ if(qNorm && !filtered.length){ el.innerHTML=`<div class="empty">${t('shopNoMatch')}</div>`; return; }
+ el.innerHTML=filtered.map((x)=>{
   const isChair=x.state==='chair';
   const waitPos=isChair?null:wait.indexOf(x)+1;
   const st=isChair?BK_ST.showed:{c:'var(--amber)',b:'var(--amber-tint)'};
+  const nmDisplay=qNorm?shopHighlight(x.name,qNorm):x.name;
   return `<div class="qcard ${isChair?'chair':''}">
     <div class="qpos ${isChair?'chair':'wait'}">${isChair?
       '<svg viewBox="0 0 24 24" fill="none" style="width:24px;height:24px"><path d="M6 4v7a4 4 0 004 4h4a4 4 0 004-4V4M5 20h14M9 15v5M15 15v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>'
       : '#'+waitPos}</div>
     <div>
-      <div class="nm">${x.name}
+      <div class="nm">${nmDisplay}
         <span class="chip" style="color:${isChair?'var(--green)':'var(--amber)'};background:${isChair?'var(--green-tint)':'var(--amber-tint)'}">
           <span class="dot" style="background:${isChair?'var(--green)':'var(--amber)'}"></span>${isChair?t('st_chair'):t('st_waiting')}
         </span>
